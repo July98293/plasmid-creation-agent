@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE 5000
+EXPOSE 5167
 
 CMD ["python", "-m", "plasmid_pipeline.api_server"]
 
