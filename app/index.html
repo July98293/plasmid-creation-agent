@@ -1,0 +1,1572 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Making plasmid prep easier!</title>
+
+  <style>
+    :root{
+      /* “Lucky”-ish: bright, clean, soft borders, gentle shadows */
+      --bg: #ffffff;
+      --panel: #ffffff;
+      --text: #0f172a;          /* slate-900 */
+      --muted: #64748b;         /* slate-500 */
+      --line: #e2e8f0;          /* slate-200 */
+      --line2:#cbd5e1;          /* slate-300 */
+      --soft: #f8fafc;          /* slate-50 */
+      --soft2:#f1f5f9;          /* slate-100 */
+      --accent:#2563eb;         /* blue-600 */
+      --ok:#16a34a;             /* green-600 */
+      --warn:#f59e0b;           /* amber-500 */
+      --shadow: 0 18px 50px rgba(2,6,23,.08);
+      --shadow2: 0 10px 28px rgba(2,6,23,.06);
+      --radius: 18px;
+      --radius2: 14px;
+      --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: var(--font);
+      background:
+        radial-gradient(900px 500px at 10% 0%, rgba(37,99,235,.10), transparent 55%),
+        radial-gradient(800px 520px at 100% 10%, rgba(22,163,74,.10), transparent 55%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    .wrap{
+      width:min(1040px, 100%);
+      margin: 0 auto;
+      padding: 28px 16px 60px;
+    }
+
+    /* Header */
+    .hero{
+      padding: 22px 0 18px;
+      display:grid;
+      gap: 10px;
+    }
+    .title{
+      font-size: clamp(30px, 4vw, 46px);
+      letter-spacing:-.03em;
+      font-weight: 850;
+      line-height: 1.05;
+      margin:0;
+    }
+    .subtitle{
+      margin:0;
+      color: var(--muted);
+      max-width: 68ch;
+      font-size: 14.5px;
+      line-height: 1.45;
+    }
+
+    /* Layout */
+    .grid{
+      margin-top: 18px;
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 16px;
+      align-items:start;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    /* Cards */
+    .card{
+      background: var(--panel);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+    .card.slim{
+      box-shadow: var(--shadow2);
+    }
+    .card h2{
+      margin: 0 0 8px;
+      font-size: 15px;
+      letter-spacing: -.01em;
+    }
+    .card p{
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    /* Chat */
+    .chatRow{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items:stretch;
+      margin-top: 10px;
+    }
+    .chatInput{
+      width:100%;
+      min-height: 62px;
+      resize: vertical;
+      padding: 14px 14px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius2);
+      outline: none;
+      font-size: 14px;
+      line-height: 1.35;
+      color: var(--text);
+    }
+    .chatInput:focus{
+      border-color: rgba(37,99,235,.35);
+      box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+    }
+    .chatInput::placeholder{ color: rgba(100,116,139,.85); }
+
+    .btn{
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff, var(--soft2));
+      color: var(--text);
+      padding: 0 16px;
+      border-radius: var(--radius2);
+      font-weight: 750;
+      cursor: pointer;
+      min-width: 108px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 8px;
+      user-select:none;
+      transition: transform .06s ease, box-shadow .12s ease, border-color .12s ease;
+    }
+    .btn:hover{
+      border-color: var(--line2);
+      box-shadow: 0 10px 24px rgba(2,6,23,.08);
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{
+      background: linear-gradient(180deg, rgba(37,99,235,.12), rgba(37,99,235,.06));
+      border-color: rgba(37,99,235,.25);
+    }
+    .btn.secondary{
+      background: #fff;
+    }
+
+    .divider{
+      margin: 14px 0 12px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .divider:before, .divider:after{
+      content:"";
+      height:1px;
+      background: var(--line);
+      flex:1;
+    }
+
+    /* Form rows */
+    .form{ display:grid; gap:10px; }
+    .row{
+      display:grid;
+      grid-template-columns: 150px 1fr 30px;
+      gap: 10px;
+      align-items:center;
+    }
+    @media (max-width: 560px){
+      .row{ grid-template-columns: 1fr; }
+      .check{ justify-self:flex-start; }
+      .label{ margin-top: 6px; }
+    }
+
+    .label{
+      font-size: 13px;
+      font-weight: 740;
+      color: rgba(15,23,42,.92);
+    }
+
+    .field{
+      width:100%;
+      height: 44px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: var(--soft);
+      padding: 10px 12px;
+      font-size: 14px;
+      outline:none;
+      color: var(--text);
+    }
+    .field:focus{
+      border-color: rgba(37,99,235,.35);
+      box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+      background: #fff;
+    }
+
+    .check{
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: transparent;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 900;
+    }
+    .check.ok{
+      border-color: rgba(22,163,74,.35);
+      background: rgba(22,163,74,.10);
+      color: var(--ok);
+    }
+
+    .actions{
+      margin-top: 10px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .hint{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.45;
+    }
+    .hint code{
+      font-family: var(--mono);
+      font-size: 11.5px;
+      background: rgba(2,6,23,.04);
+      border:1px solid var(--line);
+      padding: 2px 6px;
+      border-radius: 999px;
+    }
+
+    .toast{
+      margin-top: 12px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: rgba(15,23,42,.92);
+      background: #fff;
+      border: 1px dashed rgba(100,116,139,.45);
+      padding: 10px 12px;
+      border-radius: 14px;
+      display:none;
+    }
+    .toast.show{ display:block; }
+    .toastHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom:6px;
+      font-family: var(--font);
+      font-size:11.5px;
+      color:var(--muted);
+    }
+    .toastTitle{
+      font-weight:730;
+    }
+    .toastToggle{
+      border:none;
+      background:transparent;
+      font-size:11px;
+      color:var(--accent);
+      cursor:pointer;
+
+      
+      padding:0;
+    }
+    .toastToggle:hover{
+      text-decoration:underline;
+    }
+    .toastBody{
+      max-height:0;
+      overflow:scroll;
+      white-space:pre-wrap;
+      word-break:break-word;
+      transition:max-height .18s ease, opacity .18s ease;
+      opacity:0;
+    }
+    .toastBody.expanded{
+      max-height:260px;
+      opacity:1;
+    }
+
+    /* Right column sections */
+    .sectionTitle{
+      font-size: 14px;
+      font-weight: 820;
+      margin: 0 0 8px;
+      letter-spacing: -.01em;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(2,6,23,.02);
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+    .dot{
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .imgWrap{
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow:hidden;
+      background: #fff;
+    }
+    .imgWrap img{
+      width: 100%;
+      display:block;
+      height:auto;
+    }
+    .imgCaption{
+      padding: 10px 12px;
+      border-top: 1px solid var(--line);
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    /* Footer note */
+    .footerNote{
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .footerNote b{ color: rgba(15,23,42,.9); }
+
+    /* Small “link-like” */
+    a.fake{
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 700;
+    }
+    a.fake:hover{ text-decoration: underline; }
+
+    /* Plasmid viewer */
+    .plasmidViewer{
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: var(--soft);
+      font-size: 12.5px;
+      display:none;
+      overflow: visible;
+    }
+    .plasmidViewer.show{
+      display:block;
+    }
+    .plasmidHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom:8px;
+    }
+    .plasmidTitle{
+      font-weight:780;
+      font-size:13px;
+    }
+    .plasmidSummary{
+      margin-bottom:8px;
+      color:var(--muted);
+    }
+    .plasmidRing{
+      position:relative;
+      width:200px;
+      height:200px;
+      margin:8px auto 10px;
+      box-shadow:0 10px 24px rgba(15,23,42,.15);
+      overflow: visible;
+    }
+    .plasmidMapDetail{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-size:12px;
+      line-height:1.5;
+      color:var(--text);
+      min-height:3.5em;
+    }
+    .plasmidMapDetail .detailDefault{
+      color:var(--muted);
+    }
+    .plasmidMapDetail .detailHover{
+      display:none;
+      font-weight:600;
+    }
+    .plasmidMapDetail.isHover .detailDefault{
+      display:none;
+    }
+    .plasmidMapDetail.isHover .detailHover{
+      display:block;
+    }
+    /* Chart.js default tooltip: render into bottom box only, hide floating tooltip to avoid clip */
+    .plasmidViewer .chartjs-tooltip,
+    .plasmidRing + * .chartjs-tooltip {
+      display: none !important;
+    }
+    .plasmidLegend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px 12px;
+      margin-bottom:8px;
+    }
+    .plasmidLegendItem{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .plasmidLegendSwatch{
+      width:10px;
+      height:10px;
+      border-radius:999px;
+    }
+    .plasmidColumns{
+      display:grid;
+      grid-template-columns: minmax(0,1.2fr) minmax(0,1.1fr);
+      gap:10px;
+      margin-top:6px;
+    }
+    @media (max-width:720px){
+      .plasmidColumns{
+        grid-template-columns:1fr;
+      }
+    }
+    .plasmidSectionTitle{
+      font-weight:760;
+      font-size:12px;
+      margin-bottom:4px;
+    }
+    .plasmidList{
+      list-style:none;
+      padding:0;
+      margin:0;
+    }
+    .plasmidList li{
+      margin-bottom:2px;
+    }
+    .pillTiny{
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      padding:2px 7px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(15,23,42,.02);
+      font-size:11px;
+      color:var(--muted);
+    }
+    .toastActions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .toastDownload{
+      border:none;
+      background:transparent;
+      font-size:11px;
+      color:var(--accent);
+      cursor:pointer;
+      padding:0;
+      font-weight:700;
+    }
+    .toastDownload:hover{
+      text-decoration:underline;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1 class="title">Making plasmid prep easier!</h1>
+      <p class="subtitle">
+        Chat and descrbe what you want to build.
+      </p>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT: main UI -->
+      <div class="card">
+        <h2>Describe what you want</h2>
+        <p>You can use naturale lenguage.</p>
+
+        <div class="chatRow">
+          <textarea id="chat" class="chatInput"
+            placeholder='Ex: "Do gene TP53 with promotor CMV for HEK, vector plasmid, assembly gibson, output genbank"'></textarea>
+          <button id="send" class="btn primary" type="button">Send <span aria-hidden="true">↵</span></button>
+        </div>
+
+        <div class="divider">or, put specifics</div>
+
+        <div class="form" id="form">
+          <div class="row">
+            
+            <div></div>
+          </div>
+
+          <div class="row">
+            <div class="label">gene</div>
+            <input
+              id="gene"
+              class="field"
+              placeholder="TP53 / GFP / lacZ / ..."
+              value=""
+            />
+            <div class="check" id="ok_gene" title="filled">✓</div>
+          </div>
+
+          <div class="row">
+            <div class="label">host organism</div>
+            <select id="host" class="field">
+              <option value="">— select —</option>
+              <option value="ecoli">E. coli</option>
+              <option value="mammalian">Mammalian (HEK/CHO/etc.)</option>
+              <option value="yeast">Yeast</option>
+              <option value="plant">Plant</option>
+            </select>
+            <div class="check" id="ok_host" title="filled">✓</div>
+          </div>
+
+          <div class="row">
+            <div class="label">promoter</div>
+            <select id="promoter" class="field">
+              <option value="">— select —</option>
+              <option value="CMV">CMV</option>
+              <option value="EF1a">EF1α</option>
+              <option value="CAG">CAG</option>
+              <option value="PGK">PGK</option>
+              <option value="T7">T7</option>
+              <option value="lac">lac</option>
+              <option value="pBAD">pBAD</option>
+              <option value="GAL1">GAL1</option>
+            </select>
+            <div class="check" id="ok_promoter" title="filled">✓</div>
+          </div>
+
+          <div class="row">
+            <div class="label">vector constraint</div>
+            <select id="vector" class="field">
+              <option value="">— select —</option>
+              <option value="plasmid">Plasmid (standard)</option>
+              <option value="lentiviral">Lentiviral</option>
+              <option value="aav">AAV</option>
+            </select>
+            <div class="check" id="ok_vector" title="filled">✓</div>
+          </div>
+
+          <div class="row">
+            <div class="label">assembly preference</div>
+            <select id="assembly" class="field">
+              <option value="">— select —</option>
+              <option value="gibson">Gibson</option>
+              <option value="goldengate">Golden Gate</option>
+              <option value="restriction">Restriction/Ligation</option>
+              <option value="synthesis">Full synthesis</option>
+            </select>
+            <div class="check" id="ok_assembly" title="filled">✓</div>
+          </div>
+
+          <div class="row">
+            <div class="label">output</div>
+            <select id="output" class="field">
+              <option value="">— select —</option>
+              <option value="genbank">GenBank + plasmid map</option>
+              <option value="primers">Primers + assembly steps</option>
+              <option value="bom">Bill of materials</option>
+              <option value="all">All of the above</option>
+            </select>
+            <div class="check" id="ok_output" title="filled">✓</div>
+          </div>
+
+          <div class="actions">
+            <button class="btn primary" id="build" type="button">Build brief</button>
+            <button class="btn secondary" id="clear" type="button">Clear</button>
+          </div>
+
+          <div class="hint">
+            It reconise keyword like <code>gene</code>, <code>promoter</code>, <code>host / organismo</code>,
+            <code>gibson</code>, <code>golden gate</code>, <code>AAV</code>, <code>lentiviral</code>, ecc.
+          </div>
+
+          <div class="plasmidViewer" id="plasmid_viewer"></div>
+          <div class="toast" id="toast">
+            <div class="toastHeader">
+              <div class="toastTitle">Plasmid JSON (API output)</div>
+              <div class="toastActions">
+                <button type="button" class="toastDownload" id="download_json">Download JSON</button>
+                <button type="button" class="toastToggle" id="toast_toggle">Show JSON</button>
+              </div>
+            </div>
+            <pre class="toastBody" id="toast_body"></pre>
+          </div>
+
+    
+        </div>
+      </div>
+
+      <!-- RIGHT: explanation sections -->
+      <div style="display:grid; gap:16px;">
+        <div class="card slim">
+          <div class="sectionTitle">For technical people</div>
+          <p>
+            This site converts a free-form request into a <b>structured construct brief</b> (gene, promoter, host, vector constraints, assembly method, output).
+            That brief can be fed into an agent that: (1) searches Addgene for candidate backbones/inserts, (2) selects parts, (3) plans assembly (Gibson/Golden Gate),
+            (4) generates QC (primers, junction checks), and (5) exports GenBank/map/BOM.
+          </p>
+          <div class="pill"><span class="dot"></span> Output: JSON brief (ready for tool-calling)</div>
+        </div>
+
+        <div class="card slim">
+          <div class="sectionTitle">For non technical people</div>
+          <p>
+            If you’re thinking “what is a plasmid?”: a plasmid is a small circular piece of DNA used as a <b>carrier</b>.
+            In the lab, we use plasmids to deliver a gene into cells so the cells can produce a protein, glow, resist an antibiotic,
+            or run a biological “program”.
+          </p>
+
+          <div class="imgWrap">
+            <img
+              src="https://microbenotes.com/wp-content/uploads/2022/03/Plasmids.jpeg"
+              alt="Plasmids diagram"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+            />
+            <div class="imgCaption">
+              Plasmids are used as DNA “vehicles”: you choose a <b>promoter</b> (when/how strongly the gene is expressed),
+              the <b>gene</b> (what protein/function you want), and the <b>backbone</b> (selection marker, replication origin).
+              Then you assemble it and introduce it into bacteria or cells to propagate or express it.
+            </div>
+          </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom: OpenAI API key for smarter parsing -->
+  <div class="wrap" style="padding-top:0;">
+    <div class="card slim" style="margin-top:8px;">
+      <div class="footerNote">
+        <b>Optional:</b> Use your own OpenAI API key to let the assistant interpret your free‑text request and auto‑fill the form fields.
+        The key is stored in this page only and used directly from your browser.
+      </div>
+      <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+        <label for="openai_key" style="font-size:12px; font-weight:700; color:rgba(15,23,42,.9);">
+          OPENAI_API_KEY
+        </label>
+        <input
+          id="openai_key"
+          type="password"
+          placeholder="sk-..."
+          style="flex:1; min-width:220px; max-width:100%; height:40px; border-radius:999px; border:1px solid var(--line); padding:8px 12px; font-size:12px; background:var(--soft);"
+        />
+        <div style="font-size:11px; color:var(--muted);">
+          When set, the <b>Send</b> button will first try OpenAI to parse your chat into gene / host / promoter / vector / assembly / output.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const els = {
+      downloadJson: $("download_json"),
+      chat: $("chat"),
+      send: $("send"),
+      gene: $("gene"),
+      host: $("host"),
+      promoter: $("promoter"),
+      vector: $("vector"),
+      assembly: $("assembly"),
+      output: $("output"),
+      openaiKey: $("openai_key"),
+      autoDefaults: $("auto_defaults"),
+      toast: $("toast"),
+      toastBody: $("toast_body"),
+      toastToggle: $("toast_toggle"),
+      build: $("build"),
+      clear: $("clear"),
+      ok: {
+        gene: $("ok_gene"),
+        host: $("ok_host"),
+        promoter: $("ok_promoter"),
+        vector: $("ok_vector"),
+        assembly: $("ok_assembly"),
+        output: $("ok_output"),
+      }
+    };
+
+    let plasmidChart = null;
+    let latestJsonText = "";
+
+    function setOk(key, isOk){
+      els.ok[key].classList.toggle("ok", Boolean(isOk));
+    }
+
+    function refreshChecks(){
+      setOk("gene", els.gene.value.trim().length > 0);
+      setOk("host", els.host.value.trim().length > 0);
+      setOk("promoter", els.promoter.value.trim().length > 0);
+      setOk("vector", els.vector.value.trim().length > 0);
+      setOk("assembly", els.assembly.value.trim().length > 0);
+      setOk("output", els.output.value.trim().length > 0);
+    }
+
+    function applyDefaultValuesIfEnabled(){
+      // disabled for now
+      return;
+      if (!els.autoDefaults || !els.autoDefaults.checked) return;
+
+      // Do not auto-guess the gene; user should always specify it.
+      if (!els.host.value) els.host.value = "mammalian";
+      if (!els.promoter.value) els.promoter.value = "CMV";
+      if (!els.vector.value) els.vector.value = "plasmid";
+      if (!els.assembly.value) els.assembly.value = "gibson";
+      if (!els.output.value) els.output.value = "genbank";
+
+      refreshChecks();
+    }
+
+    // --- minimal parsing from chat ---
+    function parseChat(text){
+      const t = text.trim();
+
+      // gene: try "gene X", "fai X con", "make X with"
+      let gene = null;
+      const genePatterns = [
+        /gene\s*[:=]?\s*([A-Za-z0-9_.-]+)/i,
+        /fai\s+([A-Za-z0-9_.-]+)\s+con/i,
+        /make\s+([A-Za-z0-9_.-]+)\s+with/i,
+        /esprimi\s+([A-Za-z0-9_.-]+)/i,
+      ];
+      for (const p of genePatterns){
+        const m = t.match(p);
+        if (m) { gene = m[1]; break; }
+      }
+
+      // promoter: exact known set
+      const promoters = ["CMV","EF1a","EF1α","CAG","PGK","T7","lac","pBAD","GAL1"];
+      let promoter = null;
+      for (const p of promoters){
+        const re = new RegExp("\\b" + p.replace("EF1α","EF1(α|a)") + "\\b","i");
+        if (re.test(t)) { promoter = (p==="EF1α" ? "EF1a" : p); break; }
+      }
+      // or keywords
+      if (!promoter){
+        if (/induc/i.test(t)) promoter = "INDUCIBLE";
+        else if (/(strong|forte)/i.test(t)) promoter = "STRONG";
+      }
+
+      // host
+      let host = "";
+      if (/(hek|293|cho|mammal|mammif|cellule)/i.test(t)) host = "mammalian";
+      else if (/(e\.?\s*coli|ecoli|bacter|batter)/i.test(t)) host = "ecoli";
+      else if (/(yeast|liev|saccharomyces|pichia)/i.test(t)) host = "yeast";
+      else if (/(plant|piant|arabidopsis|benthamiana)/i.test(t)) host = "plant";
+
+      // vector
+      let vector = "";
+      if (/(lenti|lentiv)/i.test(t)) vector = "lentiviral";
+      else if (/\baav\b/i.test(t)) vector = "aav";
+      else if (/(plasmid|plasmide|vector|vettore)/i.test(t)) vector = "plasmid";
+
+      // assembly
+      let assembly = "";
+      if (/golden\s*gate|bsaI|bbsI/i.test(t)) assembly = "goldengate";
+      else if (/gibson/i.test(t)) assembly = "gibson";
+      else if (/restriction|digest|ligat|ecorI|bamHI|xhoI|hindIII/i.test(t)) assembly = "restriction";
+      else if (/synthesis|order\s*dna|gene\s*synth/i.test(t)) assembly = "synthesis";
+
+      // output
+      let output = "";
+      if (/genbank|gbk|map/i.test(t)) output = "genbank";
+      else if (/primer/i.test(t)) output = "primers";
+      else if (/bom|materials|bill/i.test(t)) output = "bom";
+      else if (/(all|everything|tutto)/i.test(t)) output = "all";
+
+      return { gene, promoter, host, vector, assembly, output };
+    }
+
+    async function parseChatWithOpenAI(text){
+      const apiKey = els.openaiKey && els.openaiKey.value.trim();
+      if (!apiKey || !text.trim()) return null;
+
+      const systemPrompt = [
+        "You are helping fill a plasmid design form.",
+        "Map a free-text user request into this JSON schema:",
+        "{",
+        '  "gene": "<gene symbol>",',
+        '  "host": "<one of: ecoli | mammalian | yeast | plant | null>",',
+        '  "promoter": "<one of: CMV | EF1a | CAG | PGK | T7 | lac | pBAD | GAL1 | null>",',
+        '  "vector": "<one of: plasmid | lentiviral | aav | null>",',
+        '  "assembly": "<one of: gibson | goldengate | restriction | synthesis | null>",',
+        '  "output": "<one of: genbank | primers | bom | all | null>"',
+        "}",
+        "",
+        "Rules:",
+        "- gene: prefer a short gene symbol (e.g. TP53, GFP, lacZ).",
+        "- host: infer from words like HEK/CHO (mammalian), E. coli (ecoli), yeast/yeast species (yeast), plant/Arabidopsis/Nicotiana (plant).",
+        "- promoter: map common ubiquitous mammalian promoters to CMV/EF1a/CAG/PGK, bacterial T7/lac/pBAD, yeast GAL1 when clear.",
+        "- vector: plasmid is the default if they say plasmid/vector/backbone; otherwise lentiviral or aav if explicitly requested.",
+        "- assembly: gibson, golden gate, restriction, or synthesis if they mention those or synonyms.",
+        "- output: genbank/map, primers, bom (bill of materials), or all when they say everything.",
+        "- If something is not specified, but it's clear from the context for that field, set that field to the most appropriate value. You can take initiative to fill the fields if you know the most appropriate value.",        
+        "- Do not add extra fields. Return ONLY the JSON object, no commentary."
+      ].join("\\n");
+
+      try{
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + apiKey,
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-nano",
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: text },
+            ],            
+            response_format: { type: "json_object" },
+          }),
+        });
+        if (!res.ok){
+          console.warn("OpenAI chat error:", res.status, res.statusText);
+          return null;
+        }
+        const data = await res.json();
+        const content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+        if (!content) return null;
+        let parsed = null;
+        try{
+          parsed = JSON.parse(content);
+        }catch(e){
+          console.warn("Failed to parse OpenAI JSON content", e, content);
+          return null;
+        }
+        return parsed;
+      }catch(err){
+        console.warn("OpenAI call failed", err);
+        return null;
+      }
+    }
+
+    function applyLLMBrief(obj){
+      if (!obj) return;
+      if (obj.gene) els.gene.value = obj.gene;
+      if (obj.host && ["ecoli","mammalian","yeast","plant"].includes(obj.host)) els.host.value = obj.host;
+      if (obj.promoter && ["CMV","EF1a","CAG","PGK","T7","lac","pBAD","GAL1"].includes(obj.promoter)) els.promoter.value = obj.promoter;
+      if (obj.vector && ["plasmid","lentiviral","aav"].includes(obj.vector)) els.vector.value = obj.vector;
+      if (obj.assembly && ["gibson","goldengate","restriction","synthesis"].includes(obj.assembly)) els.assembly.value = obj.assembly;
+      if (obj.output && ["genbank","primers","bom","all"].includes(obj.output)) els.output.value = obj.output;
+      refreshChecks();
+    }
+
+    function showToast(msg, opts){
+      const body = els.toastBody || els.toast;
+      if (body === els.toast){
+        els.toast.textContent = msg;
+      } else {
+        body.textContent = msg;
+      }
+      if (body.classList && body !== els.toast){
+        const expand = opts && opts.expand === true;
+        body.classList.toggle("expanded", expand);
+        if (els.toastToggle){
+          els.toastToggle.textContent = expand ? "Hide JSON" : "Show JSON";
+        }
+      }
+      els.toast.classList.add("show");
+    }
+    function hideToast(){
+      els.toast.classList.remove("show");
+      latestJsonText = "";
+      if (els.toastBody){
+        els.toastBody.textContent = "";
+        els.toastBody.classList.remove("expanded");
+      }else{
+        els.toast.textContent = "";
+      }
+    }
+
+    function applyParsed(p){
+      if (p.gene && !els.gene.value) els.gene.value = p.gene;
+
+      // promoter dropdown only supports known values; if STRONG/INDUCIBLE, leave empty but show note
+      if (p.promoter && ["CMV","EF1a","CAG","PGK","T7","lac","pBAD","GAL1"].includes(p.promoter) && !els.promoter.value){
+        els.promoter.value = p.promoter;
+      }
+
+      if (p.host && !els.host.value) els.host.value = p.host;
+      if (p.vector && !els.vector.value) els.vector.value = p.vector;
+      if (p.assembly && !els.assembly.value) els.assembly.value = p.assembly;
+      if (p.output && !els.output.value) els.output.value = p.output;
+
+      refreshChecks();
+
+      if (p.promoter === "STRONG" || p.promoter === "INDUCIBLE"){
+        showToast(`Parsed promoter as ${p.promoter}. Pick an exact promoter in the dropdown.`);
+      }
+    }
+
+    function buildBriefObject(){
+      return {
+        gene: els.gene.value.trim(),
+        host: els.host.value,
+        promoter: els.promoter.value,
+        vector_constraint: els.vector.value,
+        assembly_preference: els.assembly.value,
+        output: els.output.value,
+      };
+    }
+
+    function buildUserRequest(){
+      const chatText = (els.chat.value || "").trim();
+      if (chatText){
+        return chatText;
+      }
+      const brief = buildBriefObject();
+      const parts = [];
+      if (brief.gene){
+        parts.push("Express " + brief.gene);
+      }
+      if (brief.host){
+        if (brief.host === "mammalian"){
+          parts.push("in HEK293 cells");
+        } else if (brief.host === "ecoli"){
+          parts.push("in E. coli");
+        } else if (brief.host === "yeast"){
+          parts.push("in yeast");
+        } else if (brief.host === "plant"){
+          parts.push("in plant cells");
+        }
+      }
+      if (brief.promoter){
+        parts.push("using a " + brief.promoter + " promoter");
+      }
+      if (brief.assembly_preference){
+        parts.push("assembled with " + brief.assembly_preference);
+      }
+      if (brief.vector_constraint){
+        parts.push("in a " + brief.vector_constraint + " vector");
+      }
+      return parts.join(" ") || "Express TP53 in HEK293 cells using a CMV promoter assembled with Gibson";
+    }
+
+    function getSpeciesConfig(host){
+      // Note: MyGene.info only accepts common names for a small set of species;
+      // for everything else we must use NCBI taxonomy IDs.
+      switch (host){
+        case "mammalian":
+          return {
+            label: "mammalian",
+            commonName: "mammalian cells (e.g. HEK/CHO)",
+            mygene: "human",              // allowed common name
+            ensemblSpecies: "homo_sapiens",
+            ncbiTaxId: 9606,
+            stringSpecies: 9606,
+            reactomeSpecies: "Homo sapiens",
+            uniprotTaxId: 9606,
+            kazusaSpeciesCode: null,
+          };
+        case "yeast":
+          return {
+            label: "yeast",
+            commonName: "Saccharomyces cerevisiae",
+            mygene: "559292",             // NCBI taxid for S. cerevisiae
+            ensemblSpecies: "saccharomyces_cerevisiae",
+            ncbiTaxId: 559292,
+            stringSpecies: 559292,
+            reactomeSpecies: "Saccharomyces cerevisiae",
+            uniprotTaxId: 559292,
+            kazusaSpeciesCode: "4932",
+          };
+        case "plant":
+          return {
+            label: "plant",
+            commonName: "Arabidopsis thaliana (model plant)",
+            mygene: "3702",               // NCBI taxid for A. thaliana
+            ensemblSpecies: "arabidopsis_thaliana",
+            ncbiTaxId: 3702,
+            stringSpecies: 3702,
+            reactomeSpecies: "Arabidopsis thaliana",
+            uniprotTaxId: 3702,
+            kazusaSpeciesCode: "3702",
+          };
+        case "ecoli":
+        default:
+          return {
+            label: "ecoli",
+            commonName: "Escherichia coli",
+            mygene: "83333",              // NCBI taxid for E. coli K-12
+            ensemblSpecies: null,
+            ncbiTaxId: 83333,
+            stringSpecies: 83333,
+            reactomeSpecies: null,
+            uniprotTaxId: 83333,
+            kazusaSpeciesCode: "83333",
+          };
+      }
+    }
+
+    async function safeFetchJson(url, label){
+      try{
+        const res = await fetch(url, { headers: { "Accept": "application/json" } });
+        if (!res.ok){
+          console.warn(label + " request failed:", res.status, res.statusText);
+          return null;
+        }
+        return await res.json();
+      }catch(err){
+        console.warn(label + " fetch error:", err);
+        return null;
+      }
+    }
+
+    async function fetchMyGeneInfo(gene, speciesCfg){
+      const params = new URLSearchParams({
+        q: gene,
+        size: "1",
+      });
+      if (speciesCfg.mygene){
+        params.set("species", speciesCfg.mygene);
+      }
+      const url = "https://mygene.info/v3/query?" + params.toString();
+      const data = await safeFetchJson(url, "MyGene.info query");
+      if (!data || !Array.isArray(data.hits) || !data.hits.length) return null;
+      const h = data.hits[0];
+      return {
+        raw: h,
+        id: h._id,
+        symbol: h.symbol,
+        name: h.name,
+        taxid: h.taxid,
+        entrezgene: h.entrezgene,
+        ensembl: h.ensembl,
+        uniprot: h.uniprot,
+      };
+    }
+
+    async function fetchEnsemblGene(gene, speciesCfg){
+      if (!speciesCfg.ensemblSpecies) return null;
+      const url = "https://rest.ensembl.org/lookup/symbol/" +
+        speciesCfg.ensemblSpecies + "/" + encodeURIComponent(gene) +
+        "?content-type=application/json";
+      const data = await safeFetchJson(url, "Ensembl lookup");
+      if (!data || data.error) return null;
+      return {
+        id: data.id,
+        name: data.display_name || data.displayName || null,
+        biotype: data.biotype || null,
+        location: {
+          chromosome: data.seq_region_name || null,
+          start: data.start || null,
+          end: data.end || null,
+          strand: data.strand || null,
+        },
+      };
+    }
+
+    function pickUniProtAccession(uniprotField){
+      if (!uniprotField) return null;
+      if (typeof uniprotField === "string") return uniprotField;
+      const swiss = uniprotField["Swiss-Prot"] || uniprotField.Swiss_Prot;
+      if (Array.isArray(swiss) && swiss.length) return swiss[0];
+      if (typeof swiss === "string") return swiss;
+      const trembl = uniprotField.TrEMBL;
+      if (Array.isArray(trembl) && trembl.length) return trembl[0];
+      if (typeof trembl === "string") return trembl;
+      return null;
+    }
+
+    async function fetchUniProtInfo(gene, speciesCfg, myGene){
+      let accession = null;
+      if (myGene && myGene.uniprot){
+        accession = pickUniProtAccession(myGene.uniprot);
+      }
+      let data = null;
+      if (accession){
+        const url = "https://rest.uniprot.org/uniprotkb/" + accession;
+        data = await safeFetchJson(url, "UniProt record");
+        if (!data){
+          return {
+            accession,
+            url: "https://www.uniprot.org/uniprotkb/" + accession,
+          };
+        }
+      }else if (speciesCfg.uniprotTaxId){
+        const query = "gene:" + gene + " AND organism_id:" + speciesCfg.uniprotTaxId;
+        const params = new URLSearchParams({
+          query,
+          size: "1",
+          format: "json",
+        });
+        const url = "https://rest.uniprot.org/uniprotkb/search?" + params.toString();
+        const searchData = await safeFetchJson(url, "UniProt search");
+        if (searchData && Array.isArray(searchData.results) && searchData.results.length){
+          const r = searchData.results[0];
+          data = r;
+          accession = r.primaryAccession || (Array.isArray(r.accession) ? r.accession[0] : null);
+        }
+      }
+      if (!accession && !data) return null;
+
+      const proteinName =
+        (data.proteinDescription &&
+          data.proteinDescription.recommendedName &&
+          data.proteinDescription.recommendedName.fullName &&
+          data.proteinDescription.recommendedName.fullName.value) ||
+        (data.proteinDescription &&
+          data.proteinDescription.submittedName &&
+          data.proteinDescription.submittedName[0] &&
+          data.proteinDescription.submittedName[0].fullName &&
+          data.proteinDescription.submittedName[0].fullName.value) ||
+        null;
+
+      const orgName =
+        (data.organism && data.organism.scientificName) ||
+        (data.organism && data.organism.commonName) ||
+        null;
+
+      const length =
+        (data.sequence && data.sequence.length) ||
+        (data.sequence && typeof data.sequence.value === "string" ? data.sequence.value.length : null);
+
+      return {
+        accession: accession || null,
+        url: accession ? "https://www.uniprot.org/uniprotkb/" + accession : null,
+        name: proteinName,
+        organism: orgName,
+        length: length,
+      };
+    }
+
+    async function fetchStringInteractions(gene, speciesCfg){
+      if (!speciesCfg.stringSpecies) return null;
+      const params = new URLSearchParams({
+        identifiers: gene,
+        species: String(speciesCfg.stringSpecies),
+      });
+      const url = "https://string-db.org/api/json/network?" + params.toString();
+      const data = await safeFetchJson(url, "STRING network");
+      if (!Array.isArray(data)) return null;
+      return data.slice(0, 8).map((edge) => ({
+        protein1: edge.preferredName_A || edge.preferredNamea || edge.stringId_A || null,
+        protein2: edge.preferredName_B || edge.preferredNameb || edge.stringId_B || null,
+        score: edge.score || null,
+      }));
+    }
+
+    async function fetchReactomePathways(gene, speciesCfg){
+      if (!speciesCfg.reactomeSpecies) return null;
+      const params = new URLSearchParams({
+        query: gene,
+        species: speciesCfg.reactomeSpecies,
+        rows: "10",
+      });
+      const url = "https://reactome.org/ContentService/search/query?" + params.toString();
+      const data = await safeFetchJson(url, "Reactome search");
+      if (!data || !Array.isArray(data.results)) return null;
+      return data.results.slice(0, 8).map((r) => ({
+        id: r.stId || r.dbId || null,
+        name: r.displayName || null,
+        type: r.schemaClass || null,
+        species: r.speciesName || speciesCfg.reactomeSpecies,
+      }));
+    }
+
+    function buildDesignSummary(brief, speciesCfg, myGene, uniProt){
+      const parts = [];
+      if (brief.gene){
+        let genePart = "Express " + brief.gene;
+        if (myGene && myGene.name) genePart += " (" + myGene.name + ")";
+        parts.push(genePart);
+      }
+      if (brief.promoter){
+        parts.push("under the " + brief.promoter + " promoter");
+      }
+      if (brief.host){
+        parts.push("in " + (speciesCfg.commonName || brief.host));
+      }
+      if (brief.vector_constraint){
+        parts.push("using a " + brief.vector_constraint + " vector");
+      }
+      if (brief.assembly_preference){
+        parts.push("assembled via " + brief.assembly_preference);
+      }
+      if (uniProt && uniProt.name){
+        parts.push("protein: " + uniProt.name);
+      }
+      return parts.join(", ") || "No design summary available.";
+    }
+
+    function renderPlasmidViewFromPipeline(pipeline){
+      const el = els.plasmidViewer || document.getElementById("plasmid_viewer");
+      if (!el) return;
+
+      const intent = pipeline.intent || {};
+      const gene = pipeline.gene || {};
+      const backbone = pipeline.backbone || {};
+      const assembly = pipeline.assembly || {};
+      const exportData = (pipeline.export && pipeline.export.plasmid_map_data) || {};
+      const features = Array.isArray(exportData.features) ? exportData.features : [];
+
+      const backboneFeature = features.find(f => f.type === "backbone");
+      const insertFeatures = features.filter(f => f.type !== "backbone");
+
+      const title = [
+        intent.promoter || "promoter",
+        intent.gene_symbol || gene.gene_symbol || "?",
+        backbone.backbone_name || "backbone",
+      ].filter(Boolean).join(" · ");
+
+      el.classList.add("show");
+      el.innerHTML = `
+        <div class="plasmidHeader">
+          <div>
+            <div class="plasmidTitle">${title}</div>
+            <div class="pillTiny">
+              <span>${intent.expression_host || "host not set"}</span>
+            </div>
+          </div>
+          <div class="pillTiny">
+            <span>${assembly.assembly_method || intent.assembly_method || "assembly n/a"}</span>
+          </div>
+        </div>
+
+        <div class="plasmidSummary">
+          ${exportData.total_length
+            ? "Assembled plasmid length: " + exportData.total_length + " bp."
+            : "High-level plasmid design summary will appear here."}
+        </div>
+
+        <div class="plasmidRing" title="Schematic plasmid map — hover a segment for details">
+          <canvas id="plasmid_canvas" width="200" height="200"></canvas>
+        </div>
+        <div class="plasmidMapDetail" id="plasmid_map_detail">
+          <div class="detailDefault" id="plasmid_detail_default">
+            <b>${intent.gene_symbol || "Gene"}</b>
+            ${gene.organism ? " — " + gene.organism : ""}
+            <br/>
+            Promoter: <b>${intent.promoter || "—"}</b> &nbsp; Backbone: <b>${backbone.backbone_name || "n/a"}</b>
+          </div>
+          <div class="detailHover" id="plasmid_detail_hover"></div>
+        </div>
+
+        <div class="plasmidLegend">
+          <div class="plasmidLegendItem" title="Backbone / vector">
+            <span class="plasmidLegendSwatch" style="background:rgba(37,99,235,.80);"></span>
+            <span>Backbone (${backbone.backbone_name || "?"})</span>
+          </div>
+          <div class="plasmidLegendItem" title="Coding sequence for the expressed protein">
+            <span class="plasmidLegendSwatch" style="background:rgba(34,197,94,.80);"></span>
+            <span>Insert (${intent.gene_symbol || "?"})</span>
+          </div>
+          <div class="plasmidLegendItem" title="Other features (promoter, tags, polyA, etc.)">
+            <span class="plasmidLegendSwatch" style="background:rgba(248,113,113,.85);"></span>
+            <span>Auxiliary features</span>
+          </div>
+        </div>
+
+        <div class="plasmidColumns">
+          <div>
+            <div class="plasmidSectionTitle">Gene &amp; expression context</div>
+            <ul class="plasmidList">
+              <li><b>Gene symbol:</b> ${intent.gene_symbol || gene.gene_symbol || "n/a"}</li>
+              <li><b>Organism:</b> ${gene.organism || intent.target_species || "n/a"}</li>
+              ${gene.gene_id ? `<li><b>Gene ID:</b> ${gene.gene_id}</li>` : ""}
+              ${gene.transcript_id ? `<li><b>Transcript ID:</b> ${gene.transcript_id}</li>` : ""}
+            </ul>
+
+            <div class="plasmidSectionTitle" style="margin-top:8px;">Backbone</div>
+            <ul class="plasmidList">
+              <li><b>Name:</b> ${backbone.backbone_name || "n/a"}</li>
+              ${backbone.source ? `<li><b>Source:</b> ${backbone.source}</li>` : ""}
+              ${backbone.backbone_sequence ? `<li><b>Length:</b> ${backbone.backbone_sequence.length} bp</li>` : ""}
+            </ul>
+          </div>
+
+          <div>
+            <div class="plasmidSectionTitle">Assembly</div>
+            <ul class="plasmidList">
+              <li><b>Method:</b> ${assembly.assembly_method || intent.assembly_method || "n/a"}</li>
+              ${Array.isArray(assembly.primer_requirements) && assembly.primer_requirements.length
+                ? `<li><b>Primer notes:</b> ${assembly.primer_requirements.join("; ")}</li>`
+                : ""}
+            </ul>
+
+            <div class="plasmidSectionTitle" style="margin-top:8px;">Export</div>
+            <ul class="plasmidList">
+              ${Array.isArray(pipeline.export && pipeline.export.primer_list) && (pipeline.export.primer_list || []).length
+                ? `<li><b>Primers:</b> ${(pipeline.export.primer_list || []).map(p => p.name || "primer").join(", ")}</li>`
+                : ""}
+              ${Array.isArray(pipeline.export && pipeline.export.bill_of_materials) && (pipeline.export.bill_of_materials || []).length
+                ? `<li><b>Bill of materials items:</b> ${(pipeline.export.bill_of_materials || []).length}</li>`
+                : ""}
+            </ul>
+          </div>
+        </div>
+      `;
+
+      // Plasmid map: separate arcs (spacing), rich hover tooltips, decorative non-interactive segments
+      const canvas = el.querySelector("#plasmid_canvas");
+      if (canvas && window.Chart){
+        const ctx = canvas.getContext("2d");
+        if (plasmidChart){
+          plasmidChart.destroy();
+        }
+
+        const promoterLabel = intent.promoter || "promoter";
+        const geneSymbol = intent.gene_symbol || gene.gene_symbol || "CDS";
+        const vectorLabel = backbone.backbone_name || "backbone";
+
+        const featureData = [
+          {
+            label: "Promoter",
+            tooltipLines: [
+              promoterLabel,
+              "Backbone region carrying origin and selection.",
+            ],
+          },
+          {
+            label: "CDS",
+            tooltipLines: [
+              geneSymbol,
+              gene.organism ? "Organism: " + gene.organism : "",
+            ].filter(Boolean),
+          },
+          {
+            label: "Backbone",
+            tooltipLines: [
+              vectorLabel,
+              "Chosen backbone vector.",
+            ],
+          },
+          {
+            label: "Auxiliary",
+            tooltipLines: [
+              "5' / 3' UTRs, tags, polyA, terminator, linkers.",
+            ],
+          },
+        ];
+
+        // Decorative tiny segments (e.g. restriction sites / ticks) — no hover tooltip
+        const decorativeCount = 8;
+        const decorativeData = Array(decorativeCount).fill(1);
+        const decorativeColors = Array(decorativeCount).fill("rgba(15,23,42,0.12)");
+
+        const detailBox = el.querySelector("#plasmid_map_detail");
+        const detailDefault = el.querySelector("#plasmid_detail_default");
+        const detailHover = el.querySelector("#plasmid_detail_hover");
+
+        plasmidChart = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: featureData.map(f => f.label).concat(Array(decorativeCount).fill("")),
+            datasets: [
+              {
+                data: [12, 38, 28, 22],
+                backgroundColor: [
+                  "rgba(37,99,235,0.9)",
+                  "rgba(34,197,94,0.9)",
+                  "rgba(148,163,184,0.95)",
+                  "rgba(248,113,113,0.9)",
+                ],
+                borderWidth: 0,
+                spacing: 3,
+                hoverOffset: 6,
+              },
+              {
+                data: decorativeData,
+                backgroundColor: decorativeColors,
+                borderWidth: 0,
+                spacing: 1,
+                hoverOffset: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: false,
+            cutout: "55%",
+            rotation: -90,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                enabled: true,
+                external: function(context) {
+                  if (!detailBox || !detailHover) return;
+                  if (context.tooltip.opacity === 0) {
+                    detailBox.classList.remove("isHover");
+                    detailHover.innerHTML = "";
+                    return;
+                  }
+                  const item = context.tooltip.dataPoints && context.tooltip.dataPoints[0];
+                  if (!item || item.datasetIndex !== 0 || !featureData[item.dataIndex]) return;
+                  const f = featureData[item.dataIndex];
+                  detailHover.innerHTML = "<b>" + f.label + "</b><br/>" + (f.tooltipLines || []).join("<br/>");
+                  detailBox.classList.add("isHover");
+                }
+              }
+            }
+          },
+        });
+      }
+    }
+
+    async function callPipelineBackend(){
+      hideToast();
+      applyDefaultValuesIfEnabled();
+      const userRequest = buildUserRequest();
+
+      showToast("Contacting local pipeline API... This may take a few seconds.");
+
+      let responseJson = null;
+      try{
+        const res = await fetch("/api/pipeline", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+          body: JSON.stringify({ user_request: userRequest }),
+        });
+        responseJson = await res.json();
+        if (!res.ok){
+          const msg = responseJson && responseJson.error
+            ? responseJson.error
+            : "Pipeline API returned HTTP " + res.status;
+          showToast("Pipeline error: " + msg);
+          return;
+        }
+      }catch(err){
+        console.error("Pipeline API call failed:", err);
+        showToast("Error calling /api/pipeline: " + err.message);
+        return;
+      }
+
+      latestJsonText = JSON.stringify(responseJson, null, 2);
+     showToast(latestJsonText);
+renderPlasmidViewFromPipeline(responseJson);
+    }
+
+    // Events
+    ["gene","host","promoter","vector","assembly","output"].forEach(id=>{
+      $(id).addEventListener("input", refreshChecks);
+      $(id).addEventListener("change", refreshChecks);
+    });
+
+    if (els.autoDefaults){
+      els.autoDefaults.addEventListener("change", ()=>{
+        if (els.autoDefaults.checked){
+          applyDefaultValuesIfEnabled();
+        }
+      });
+    }
+
+    if (els.toastToggle && els.toastBody){
+      els.toastToggle.addEventListener("click", ()=>{
+        const expanded = els.toastBody.classList.toggle("expanded");
+        els.toastToggle.textContent = expanded ? "Hide JSON" : "Show JSON";
+      });
+    }
+
+    if (els.downloadJson){
+      els.downloadJson.addEventListener("click", ()=>{
+        if (!latestJsonText) {
+          showToast("No JSON available yet. Run the pipeline first.");
+          return;
+        }
+
+        const blob = new Blob([latestJsonText], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "plasmid_output.txt";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        URL.revokeObjectURL(url);
+      });
+    }
+    els.send.addEventListener("click", async ()=>{
+      hideToast();
+      const text = els.chat.value.trim();
+      if (!text) return;
+
+      let usedLLM = false;
+      // First try OpenAI, if an API key is present
+      if (els.openaiKey && els.openaiKey.value.trim()){
+        const llmBrief = await parseChatWithOpenAI(text);
+        if (llmBrief){
+          applyLLMBrief(llmBrief);
+          usedLLM = true;
+        }
+      }
+
+      // Fallback to the regex-based parser
+      if (!usedLLM){
+        const parsed = parseChat(text);
+        applyParsed(parsed);
+      }
+    });
+
+    els.chat.addEventListener("keydown", (e)=>{
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter"){
+        e.preventDefault();
+        els.send.click();
+      }
+    });
+
+    els.build.addEventListener("click", ()=>{
+      callPipelineBackend().catch((err)=>{
+        console.error("callPipelineBackend error:", err);
+        showToast("Error while running pipeline: " + err.message);
+      });
+    });
+
+    els.clear.addEventListener("click", ()=>{
+      els.chat.value = "";
+      els.gene.value = "";
+      els.host.value = "";
+      els.promoter.value = "";
+      els.vector.value = "";
+      els.assembly.value = "";
+      els.output.value = "";
+      hideToast();
+      applyDefaultValuesIfEnabled();
+    });
+
+    applyDefaultValuesIfEnabled();
+  </script>
+</body>
+</html>

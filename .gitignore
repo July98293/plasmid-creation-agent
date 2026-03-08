@@ -1,0 +1,11 @@
+client/a2a-client
+client/agent_conversation.log
+server/.env
+server/a2a-server
+.env
+__pycache__
+client/__pycache__
+
+*/__pycache__
+client/__pycache__
+agent_conversation.log
