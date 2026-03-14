@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import json
-from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import List, Optional
 
 from logging_utils import get_conversation_logger
 
@@ -11,96 +9,216 @@ from .models import FeatureInput, FeatureOutput, ResolvedFeature, WarningMessage
 
 class FeatureAgent:
     """
-    Resolves promoters / tags / terminators from a local JSON library.
+    Resolves promoter / kozak / terminator features with strict biological checks.
+
+    Key fixes:
+    - Rejects ultra-short fake promoters.
+    - Separates promoter from Kozak.
+    - Adds a real default mammalian polyA if terminator/polyA is missing.
     """
 
-    def __init__(self, library_path: Optional[Path] = None) -> None:
+    # Minimal practical promoter lengths to avoid misclassifying Kozak/start context.
+    MIN_PROMOTER_LENGTH = 80
+
+    # Canonical default parts.
+    CMV_PROMOTER_SEQ = (
+        "CGCAAATGGGCGGTAGGCGTGTACTGAGAGTGCACCATATGCGGTGTGAAATACCGCACAGATGCGTAAGGAGAAAATACCGCATCAGG"
+        "CGCCATTCGCCATTCAGGCTGCGCAACTGTTGGGAAGGGCGATCGGTGCGGGCCTCTTCGCTATTACGCCAGCTGGCGAAAGGGGGATGT"
+        "GCTGCAAGGCGATTAAGTTGGGTAACGCCAGGGTTTTCCCAGTCACGACGTTGTAAAACGACGGCCAGTGAGCG"
+    )
+
+    KOZAK_SEQ = "GCCACC"
+
+    BGH_POLYA_SEQ = (
+        "AATAAA"
+        "GATCTTTATTTTCATTAGATCTGTGTGTTGGTTTTTTGTGTGAATCGATAGCGATAAGGATCC"
+    )
+
+    SV40_POLYA_SEQ = (
+        "AATAAA"
+        "GCAATAGCATCACAAATTTCACAAATAAAGCATTTTTTTCACTGCATTCTAGTTGTGGTTTGTCCAAACTCATCAATGTATCTTATCATG"
+    )
+
+    def __init__(self) -> None:
         self._logger = get_conversation_logger()
-        if library_path is None:
-            library_path = Path(__file__).with_name("feature_library.json")
-        self._library_path = library_path
-        self._library: Dict[str, Any] = self._load_library()
 
-    def _load_library(self) -> Dict[str, Any]:
-        if not self._library_path.exists():
-            return {}
-        with self._library_path.open("r", encoding="utf-8") as f:
-            return json.load(f)
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
 
-    def _resolve_single(
-        self,
-        name: Optional[str],
-        category: str,
-        *,
-        position_hint: Optional[str] = None,
-    ) -> tuple[Optional[ResolvedFeature], Optional[WarningMessage]]:
-        if not name:
-            return None, None
-        coll = self._library.get(category, {})
-        entry = coll.get(name)
-        if not entry:
-            return None, WarningMessage(
-                code=f"{category.upper()}_NOT_FOUND",
-                message=f"Feature '{name}' not found in local {category} library.",
-            )
-        feat_type = "promoter" if category == "promoters" else category.rstrip("s")
-        seq = (entry.get("sequence") or "").strip().upper()
+    def _clean_sequence(self, seq: Optional[str]) -> str:
         if not seq:
-            return None, WarningMessage(
-                code=f"{category.upper()}_SEQUENCE_EMPTY",
-                message=f"Feature '{name}' in {category} library has no sequence defined.",
+            return ""
+        seq = seq.upper().replace("\n", "").replace("\r", "").replace(" ", "")
+        return "".join(ch for ch in seq if ch in {"A", "T", "G", "C", "N"})
+
+    def _looks_like_fake_promoter(self, seq: str) -> bool:
+        """
+        Reject short sequences that are really Kozak/start-context fragments.
+        """
+        seq = self._clean_sequence(seq)
+        if len(seq) < self.MIN_PROMOTER_LENGTH:
+            return True
+
+        # Strong sign of start-context masquerading as promoter
+        if seq in {"GCCACC", "GCCGCCACCATGG", "CCACCATG", "ACCATG"}:
+            return True
+
+        return False
+
+    def _default_promoter_for_input(self, inp: FeatureInput) -> Optional[ResolvedFeature]:
+        promoter_name = (inp.promoter or "").upper()
+        host = (inp.expression_host or "").lower()
+
+        if promoter_name == "CMV" and any(x in host for x in ["hek", "293", "cho", "mamm"]):
+            return ResolvedFeature(
+                name="CMV",
+                type="promoter",
+                sequence=self.CMV_PROMOTER_SEQ,
+                position_hint=None,
             )
-        feat = ResolvedFeature(
-            name=name,
-            type=feat_type,  # type: ignore[arg-type]
-            sequence=seq,
-            position_hint=position_hint,
-        )
-        return feat, None
 
-    def run(self, inp: FeatureInput) -> FeatureOutput:
-        self._logger.info("[FEATURE] INPUT %s", inp.model_dump())
+        return None
 
-        features: List[ResolvedFeature] = []
-        warnings: List[WarningMessage] = []
+    def _default_kozak_for_input(self, inp: FeatureInput) -> Optional[ResolvedFeature]:
+        host = (inp.expression_host or "").lower()
+        if any(x in host for x in ["hek", "293", "cho", "mamm"]):
+            return ResolvedFeature(
+                name="Kozak",
+                type="kozak",
+                sequence=self.KOZAK_SEQ,
+                position_hint=None,
+            )
+        return None
 
-        promoter, w = self._resolve_single(inp.promoter, "promoters")
-        if promoter:
-            features.append(promoter)
-        if w:
-            warnings.append(w)
+    def _default_terminator_for_input(self, inp: FeatureInput) -> Optional[ResolvedFeature]:
+        host = (inp.expression_host or "").lower()
+        if any(x in host for x in ["hek", "293", "cho", "mamm"]):
+            return ResolvedFeature(
+                name="bGH_polyA",
+                type="terminator",
+                sequence=self.BGH_POLYA_SEQ,
+                position_hint=None,
+            )
+        return None
 
-        n_tag, w = self._resolve_single(inp.n_terminal_tag, "tags", position_hint="N")
-        if n_tag:
-            features.append(n_tag)
-        if w:
-            warnings.append(w)
+    def _normalize_feature(self, feat: ResolvedFeature, warnings: List[WarningMessage]) -> Optional[ResolvedFeature]:
+        seq = self._clean_sequence(feat.sequence)
 
-        c_tag, w = self._resolve_single(inp.c_terminal_tag, "tags", position_hint="C")
-        if c_tag:
-            features.append(c_tag)
-        if w:
-            warnings.append(w)
+        if feat.type == "promoter":
+            if self._looks_like_fake_promoter(seq):
+                warnings.append(
+                    WarningMessage(
+                        code="REJECTED_FAKE_OR_TOO_SHORT_PROMOTER",
+                        message=(
+                            f"Rejected promoter candidate '{feat.name}' because its sequence is too short "
+                            f"({len(seq)} bp) or looks like a Kozak/start-context fragment."
+                        ),
+                    )
+                )
+                return None
 
-        term, w = self._resolve_single(inp.terminator, "terminators")
-        if term:
-            features.append(term)
-        if w:
-            warnings.append(w)
-
-        # Always add a simple default Kozak if host looks mammalian.
-        if not any(f.type == "kozak" for f in features):
-            kozak_entry = self._library.get("kozak", {}).get("standard_mammalian")
-            if kozak_entry:
-                features.append(
-                    ResolvedFeature(
-                        name="standard_mammalian",
-                        type="kozak",
-                        sequence=kozak_entry.get("sequence", ""),
+        if feat.type == "kozak":
+            if seq != self.KOZAK_SEQ:
+                warnings.append(
+                    WarningMessage(
+                        code="NONCANONICAL_KOZAK",
+                        message=f"Kozak sequence '{feat.name}' is non-canonical; keeping as provided.",
                     )
                 )
 
-        out = FeatureOutput(features=features, warnings=warnings)
-        self._logger.info("[FEATURE] OUTPUT %s", out.model_dump())
-        return out
+        return ResolvedFeature(
+            name=feat.name,
+            type=feat.type,
+            sequence=seq,
+            position_hint=feat.position_hint,
+        )
 
+    # ------------------------------------------------------------------
+    # Main
+    # ------------------------------------------------------------------
+
+    def run(self, inp: FeatureInput) -> FeatureOutput:
+        self._logger.info("[FEATURE] INPUT %s", inp.model_dump())
+        warnings: List[WarningMessage] = []
+        out_features: List[ResolvedFeature] = []
+
+        # 1) Normalize user/upstream-provided features first.
+        incoming = list(inp.features or [])
+        for feat in incoming:
+            normalized = self._normalize_feature(feat, warnings)
+            if normalized is not None:
+                out_features.append(normalized)
+
+        existing_types = {f.type for f in out_features}
+        existing_names_upper = {f.name.upper() for f in out_features}
+
+        # 2) Promoter
+        if "promoter" not in existing_types and (inp.promoter or "").strip():
+            promoter = self._default_promoter_for_input(inp)
+            if promoter:
+                out_features.append(promoter)
+            else:
+                warnings.append(
+                    WarningMessage(
+                        code="PROMOTER_NOT_RESOLVED",
+                        message=f"Could not resolve a valid promoter sequence for requested promoter '{inp.promoter}'.",
+                    )
+                )
+
+        # 3) Kozak
+        if "kozak" not in existing_types:
+            kozak = self._default_kozak_for_input(inp)
+            if kozak:
+                out_features.append(kozak)
+
+        # 4) Terminator / polyA
+        has_terminator = any(f.type == "terminator" for f in out_features)
+        if not has_terminator:
+            default_term = self._default_terminator_for_input(inp)
+            if default_term:
+                out_features.append(default_term)
+                warnings.append(
+                    WarningMessage(
+                        code="DEFAULT_TERMINATOR_ADDED",
+                        message=(
+                            f"No terminator/polyA was provided. Added default mammalian terminator '{default_term.name}'."
+                        ),
+                    )
+                )
+
+        # 5) Sanity checks
+        promoter_feats = [f for f in out_features if f.type == "promoter"]
+        if len(promoter_feats) > 1:
+            warnings.append(
+                WarningMessage(
+                    code="MULTIPLE_PROMOTERS_RESOLVED",
+                    message="Multiple promoters were resolved. Downstream construct assembly should choose only one.",
+                )
+            )
+
+        kozak_feats = [f for f in out_features if f.type == "kozak"]
+        if len(kozak_feats) > 1:
+            warnings.append(
+                WarningMessage(
+                    code="MULTIPLE_KOZAKS_RESOLVED",
+                    message="Multiple Kozak sequences were resolved. Downstream construct assembly should choose only one.",
+                )
+            )
+
+        terminator_feats = [f for f in out_features if f.type == "terminator"]
+        if len(terminator_feats) > 1:
+            warnings.append(
+                WarningMessage(
+                    code="MULTIPLE_TERMINATORS_RESOLVED",
+                    message="Multiple terminator/polyA features were resolved. Downstream construct assembly should choose only one.",
+                )
+            )
+
+        out = FeatureOutput(features=out_features, warnings=warnings)
+        self._logger.info(
+            "[FEATURE] OUTPUT features=%s warnings=%s",
+            [f.model_dump() for f in out.features],
+            [w.model_dump() for w in out.warnings],
+        )
+        return out

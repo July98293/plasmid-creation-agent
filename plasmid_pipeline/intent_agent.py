@@ -1,130 +1,177 @@
 from __future__ import annotations
 
-import re
-from typing import Optional
+import json
+import os
+from typing import List, Optional
+
+from openai import OpenAI
+from pydantic import BaseModel, Field, ValidationError
 
 from logging_utils import get_conversation_logger
-
 from .models import IntentInput, IntentOutput
+
+
+class TagSpec(BaseModel):
+    name: str
+    position: Optional[str] = None  # "N-terminal" | "C-terminal" | None
+
+
+class IntentExtraction(BaseModel):
+    gene: Optional[str] = None
+    backbone: Optional[str] = None
+    promoter: Optional[str] = None
+    tags: List[TagSpec] = Field(default_factory=list)
+    selection_marker: Optional[str] = None
+    origin_of_replication: Optional[str] = None
+    terminator: Optional[str] = None
+    polyA: Optional[str] = None
+    cloning_site: Optional[str] = None
+    expression_host: Optional[str] = None
+    best_expression_host: Optional[str] = None
+    assembly_method: Optional[str] = None
+    target_species: Optional[str] = None
+    notes: List[str] = Field(default_factory=list)
 
 
 class IntentAgent:
     """
-    Deterministic-ish intent parser.
+    LLM-based intent parser.
 
-    For now this is regex / rule based so the pipeline stays deterministic
-    even without an external LLM, but the IO is Pydantic and stable.
+    Reads the user's plasmid-design request and extracts structured design fields.
+    Uses OpenAI Responses API, then validates with Pydantic before converting to
+    the project's IntentOutput model.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        openai_api_key: Optional[str] = None,
+        model: str = "gpt-5",
+    ) -> None:
         self._logger = get_conversation_logger()
+        api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY is not set.")
+        self._client = OpenAI(api_key=api_key)
+        self._model = model
 
-    def _infer_species(self, text: str) -> str:
-        t = text.lower()
-        if any(k in t for k in ["hek", "293", "human", "mammal"]):
-            return "homo_sapiens"
-        if "mouse" in t or "murine" in t or "cho" in t:
-            return "mus_musculus"
-        if "yeast" in t or "saccharomyces" in t:
-            return "saccharomyces_cerevisiae"
-        if "ecoli" in t or "e. coli" in t or "e-coli" in t:
-            return "escherichia_coli"
-        return "homo_sapiens"
+    def _build_system_prompt(self) -> str:
+        return (
+            "You extract plasmid design intent from a user's free-text request.\n"
+            "Return JSON only.\n"
+            "Do not include markdown.\n"
+            "Do not invent highly specific biological parts unless strongly implied.\n"
+            "If a field is not stated, return null.\n"
+            "tags must be a list of objects with keys: name, position.\n"
+            "Valid position values are 'N-terminal', 'C-terminal', or null.\n"
+            "expression_host = what the user explicitly requested.\n"
+            "best_expression_host = your biological recommendation based on the request.\n"
+            "origin_of_replication means plasmid origin / ori.\n"
+            "polyA means polyadenylation signal.\n"
+            "cloning_site means MCS / cloning site / insertion site if mentioned.\n"
+            "target_species means the species of the gene/cargo if stated or strongly implied.\n"
+            "assembly_method should capture things like Gibson, GoldenGate, Restriction, Synthesis.\n"
+            "Keep standard gene symbols exactly as written when possible.\n"
+            "Output schema keys exactly:\n"
+            "{\n"
+            '  "gene": null,\n'
+            '  "backbone": null,\n'
+            '  "promoter": null,\n'
+            '  "tags": [],\n'
+            '  "selection_marker": null,\n'
+            '  "origin_of_replication": null,\n'
+            '  "terminator": null,\n'
+            '  "polyA": null,\n'
+            '  "cloning_site": null,\n'
+            '  "expression_host": null,\n'
+            '  "best_expression_host": null,\n'
+            '  "assembly_method": null,\n'
+            '  "target_species": null,\n'
+            '  "notes": []\n'
+            "}"
+        )
 
-    def _infer_host(self, text: str) -> str:
-        t = text.lower()
-        if "hek" in t or "293" in t:
-            return "HEK293"
-        if "cho" in t:
-            return "CHO"
-        if "ecoli" in t or "e. coli" in t or "e-coli" in t:
-            return "E. coli"
-        if "yeast" in t or "saccharomyces" in t:
-            return "yeast"
-        return "mammalian (unspecified)"
+    def _extract_with_llm(self, user_text: str) -> IntentExtraction:
+        response = self._client.responses.create(
+            model=self._model,
+            input=[
+                {
+                    "role": "system",
+                    "content": self._build_system_prompt(),
+                },
+                {
+                    "role": "user",
+                    "content": user_text,
+                },
+            ],
+        )
 
-    def _infer_promoter(self, text: str) -> Optional[str]:
-        t = text.lower()
-        if "cmv" in t:
-            return "CMV"
-        if "ef1a" in t or "ef1α" in t:
-            return "EF1a"
-        if "cag" in t:
-            return "CAG"
-        if "pgk" in t:
-            return "PGK"
-        if "t7" in t:
-            return "T7"
-        if "lac" in t:
-            return "lac"
-        return None
+        text = getattr(response, "output_text", None)
+        if not text:
+            raise ValueError("OpenAI returned no output_text for intent extraction.")
 
-    def _infer_assembly(self, text: str) -> Optional[str]:
-        t = text.lower()
-        if "gibson" in t:
-            return "Gibson"
-        if "golden gate" in t or "goldengate" in t:
-            return "GoldenGate"
-        if "restriction" in t or "digest" in t or "ligat" in t:
-            return "Restriction"
-        if "synthesis" in t or "synthesise" in t:
-            return "Synthesis"
-        return None
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Intent extraction did not return valid JSON. Raw output: {text}") from e
 
-    def _infer_tags(self, text: str) -> tuple[Optional[str], Optional[str]]:
-        t = text.lower()
+        try:
+            return IntentExtraction.model_validate(data)
+        except ValidationError as e:
+            raise ValueError(f"Intent extraction JSON failed schema validation: {e}") from e
+
+    def _pick_n_and_c_tags(
+        self,
+        tags: List[TagSpec],
+    ) -> tuple[Optional[str], Optional[str], List[str]]:
         n_tag: Optional[str] = None
         c_tag: Optional[str] = None
-        if "flag tag" in t or "flag-tag" in t or "n-terminal flag" in t:
-            if "c-terminal" in t:
-                c_tag = "FLAG"
+        notes: List[str] = []
+
+        for tag in tags:
+            if tag.position == "N-terminal" and n_tag is None:
+                n_tag = tag.name
+            elif tag.position == "C-terminal" and c_tag is None:
+                c_tag = tag.name
             else:
-                n_tag = "FLAG"
-        if "his tag" in t or "6xhis" in t or "his6" in t:
-            c_tag = c_tag or "His6"
-        return n_tag, c_tag
+                notes.append(
+                    f"Unplaced or additional tag extracted: {tag.name} (position={tag.position})."
+                )
 
-    def _infer_terminator(self, text: str) -> Optional[str]:
-        t = text.lower()
-        if "bgh" in t and "poly" in t:
-            return "BGH_polyA"
-        if "sv40" in t and "poly" in t:
-            return "SV40_polyA"
-        return None
-
-    def _extract_gene_symbol(self, text: str) -> Optional[str]:
-        # Very small heuristic: first all-caps token with 2–8 chars
-        tokens = re.findall(r"\b[A-Z0-9]{2,8}\b", text)
-        for tok in tokens:
-            if tok in {"CMV", "T7"}:
-                continue
-            return tok
-        return None
+        return n_tag, c_tag, notes
 
     def run(self, inp: IntentInput) -> IntentOutput:
         self._logger.info("[INTENT] INPUT %s", inp.user_request)
 
-        text = inp.user_request
+        extracted = self._extract_with_llm(inp.user_request)
 
-        gene_symbol = self._extract_gene_symbol(text) or "GENE"
-        target_species = self._infer_species(text)
-        expression_host = self._infer_host(text)
-        promoter = self._infer_promoter(text)
-        assembly_method = self._infer_assembly(text)
-        n_tag, c_tag = self._infer_tags(text)
-        terminator = self._infer_terminator(text)
+        n_tag, c_tag, tag_notes = self._pick_n_and_c_tags(extracted.tags)
+        all_notes = list(extracted.notes) + tag_notes
 
+        # Map extracted fields into your existing pipeline IntentOutput.
+        # This assumes your current IntentOutput still expects these legacy keys.
         out = IntentOutput(
-            gene_symbol=gene_symbol,
-            target_species=target_species,
-            expression_host=expression_host,
-            promoter=promoter,
-            assembly_method=assembly_method,
+            gene_symbol=extracted.gene or "GENE",
+            target_species=extracted.target_species or "unspecified",
+            expression_host=extracted.expression_host or "unspecified",
+            promoter=extracted.promoter,
+            assembly_method=extracted.assembly_method,
             n_terminal_tag=n_tag,
             c_terminal_tag=c_tag,
-            terminator=terminator,
+            terminator=extracted.terminator or extracted.polyA,
         )
 
-        self._logger.info("[INTENT] OUTPUT %s", out.model_dump())
+        self._logger.info(
+            "[INTENT] OUTPUT %s | extra_fields=%s",
+            out.model_dump(),
+            {
+                "backbone": extracted.backbone,
+                "selection_marker": extracted.selection_marker,
+                "origin_of_replication": extracted.origin_of_replication,
+                "polyA": extracted.polyA,
+                "cloning_site": extracted.cloning_site,
+                "best_expression_host": extracted.best_expression_host,
+                "notes": all_notes,
+            },
+        )
         return out
-

@@ -154,6 +154,23 @@ class ConstructAgent:
             )
             insertion_mode = "cds_plus_tags"
 
+        # Heuristic: if backbone name clearly indicates an expression vector (e.g. pCMV)
+        # and a promoter is requested, avoid duplicating the promoter cassette.
+        name_lower = inp.backbone.backbone_name.lower()
+        if any(x in name_lower for x in ["expression vector", "pcmv", "ef1", "cag", "pgk"]):
+            if promoters:
+                include_promoter = False
+                insertion_mode = "cds_plus_tags"
+                warnings.append(
+                    WarningMessage(
+                        code="BACKBONE_EXPRESSION_VECTOR_HEURISTIC",
+                        message=(
+                            "Backbone name suggests it is an expression vector; "
+                            "requested promoter will be omitted to avoid duplicating the cassette."
+                        ),
+                    )
+                )
+
         if requested_promoter_names and any(p in backbone_promoters for p in requested_promoter_names):
             include_promoter = False
             if insertion_mode == "full_cassette":
@@ -321,6 +338,7 @@ class ConstructAgent:
             warnings=warnings,
             promoter_included=promoter_included,
             terminator_included=terminator_included,
+            polyA_included=False,
             insertion_mode=insertion_mode,  # type: ignore[arg-type]
         )
 

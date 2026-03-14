@@ -195,12 +195,6 @@ class Annotation(BaseModel):
     type: str
 
 
-class ConstructAnnotation(Annotation):
-    """
-    Backwards-compatible alias used by ConstructAgent for richer annotations.
-    """
-    pass
-
 class ConstructInput(BaseModel):
     intent: IntentOutput
     gene: GeneOutput
