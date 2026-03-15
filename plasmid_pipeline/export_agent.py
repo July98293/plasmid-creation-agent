@@ -27,7 +27,7 @@ class ExportAgent:
 
         final_seq = inp.assembly.assembled_sequence
         backbone_len = len(inp.backbone.backbone_sequence)
-        insert_len = len(inp.construct_output.construct_sequence)
+        insert_len = len(inp.assembly.cassette_sequence)
         total_len = len(final_seq)
         junction_offset = inp.assembly.junction_offset
 
@@ -51,7 +51,7 @@ class ExportAgent:
                 }
             )
 
-        for ann in inp.construct_output.annotations:
+        for ann in inp.assembly.cassette_annotations:
             features.append(
                 {
                     "name": ann.name,
@@ -90,8 +90,8 @@ class ExportAgent:
             },
             {
                 "type": "insert",
-                "features": inp.construct_output.feature_order,
-                "insertion_mode": inp.construct_output.insertion_mode,
+                "features": inp.assembly.feature_order,
+                "insertion_mode": "full_cassette",
             },
         ]
 
@@ -101,7 +101,6 @@ class ExportAgent:
             "features": inp.features.model_dump(),
             "expression": inp.expression.model_dump(),
             "backbone": inp.backbone.model_dump(),
-            "construct_output": inp.construct_output.model_dump(),
             "assembly": inp.assembly.model_dump(),
         }
 

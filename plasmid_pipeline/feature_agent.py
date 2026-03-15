@@ -26,6 +26,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
 import urllib.parse
 import urllib.request
 from typing import Any, Dict, List, Optional, Tuple
@@ -112,6 +113,7 @@ class FeatureAgent:
     # ------------------------------------------------------------------
 
     def _http_get_json(self, url: str, params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        time.sleep(0.5)
         full_url = f"{url}?{urllib.parse.urlencode(params)}"
         print(f"[FEATURE HTTP] GET {full_url}", flush=True)
         req = urllib.request.Request(
@@ -128,6 +130,7 @@ class FeatureAgent:
             return None
 
     def _http_get_text(self, url: str, params: Dict[str, Any]) -> Optional[str]:
+        time.sleep(0.5)
         full_url = f"{url}?{urllib.parse.urlencode(params)}"
         print(f"[FEATURE HTTP] GET {full_url}", flush=True)
         req = urllib.request.Request(

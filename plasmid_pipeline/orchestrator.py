@@ -9,7 +9,6 @@ from logging_utils import get_conversation_logger
 
 from .assembly_agent import AssemblyAgent
 from .backbone_agent import BackboneAgent
-from .construct_agent import ConstructAgent
 from .expression_agent import ExpressionAgent
 from .export_agent import ExportAgent
 from .gene_agent import GeneAgent
@@ -20,7 +19,6 @@ from .models import (
     GeneInput,
     FeatureInput,
     ExpressionInput,
-    ConstructInput,
     AssemblyInput,
     ExportInput,
     BackboneInput,
@@ -36,10 +34,9 @@ class PipelineOrchestrator:
     """
     Pipeline:
 
-    Intent → [Gene ‖ Backbone ‖ Feature] → Expression → Construct → Assembly → Export
+    Intent → [Gene ‖ Backbone ‖ Feature] → Expression → Assembly → Export
 
     Gene, Backbone, and Feature run concurrently after Intent completes.
-    Their outputs are joined before Expression and Construct.
     """
 
     def __init__(self) -> None:
@@ -50,7 +47,6 @@ class PipelineOrchestrator:
         self.feature_agent = FeatureAgent()
         self.expression_agent = ExpressionAgent()
         self.backbone_agent = BackboneAgent()
-        self.construct_agent = ConstructAgent()
         self.assembly_agent = AssemblyAgent()
         self.export_agent = ExportAgent()
 
@@ -108,24 +104,31 @@ class PipelineOrchestrator:
             ExpressionInput(intent=intent, gene=gene, features=feature)
         )
 
-        construct = self.construct_agent.run(
-            ConstructInput(
-                gene=gene,
-                features=feature,
-                expression=expression,
-                backbone=backbone,
+        try:
+            assembly = self.assembly_agent.run(
+                AssemblyInput(
+                    backbone_sequence=backbone.backbone_sequence,
+                    backbone_name=backbone.backbone_name,
+                    backbone_genbank=backbone.backbone_genbank,
+                    cds_sequence=gene.cds_sequence or "",
+                    gene_symbol=gene.gene_symbol,
+                    features=feature.features,
+                    assembly_method=intent.assembly_method,
+                )
             )
-        )
-
-        self._require(bool(construct.construct_sequence), "Construct sequence is empty.")
-
-        assembly = self.assembly_agent.run(
-            AssemblyInput(
-                construct_sequence=construct.construct_sequence,
-                backbone_sequence=backbone.backbone_sequence,
-                assembly_preference=intent.assembly_method,
+        except ValueError as exc:
+            resolved_types = {f.type for f in feature.features}
+            missing = [t for t in ("promoter", "terminator", "kozak") if t not in resolved_types]
+            has_cds = bool(gene.cds_sequence)
+            self._logger.error(
+                "[ASSEMBLY] Failed: %s | cds_present=%s missing_feature_types=%s",
+                exc, has_cds, missing,
             )
-        )
+            raise PipelineValidationError(
+                f"Assembly failed: {exc}. "
+                f"CDS present: {has_cds}. "
+                f"Missing feature types: {missing or 'none detected'}."
+            ) from exc
 
         export = self.export_agent.run(
             ExportInput(
@@ -133,7 +136,6 @@ class PipelineOrchestrator:
                 gene=gene,
                 features=feature,
                 expression=expression,
-                construct_output=construct,
                 backbone=backbone,
                 assembly=assembly,
             )
@@ -145,7 +147,6 @@ class PipelineOrchestrator:
             features=feature,
             expression=expression,
             backbone=backbone,
-            construct_output=construct,
             assembly=assembly,
             export_output=export,
         )

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from typing import List, Optional
 
 from openai import OpenAI
@@ -141,6 +142,15 @@ class IntentAgent:
 
         return n_tag, c_tag, notes
 
+    @staticmethod
+    def _clean(value: Optional[str]) -> tuple[Optional[str], bool]:
+        """Strip (suggested) suffix. Returns (cleaned_value, was_suggested)."""
+        if value is None:
+            return None, False
+        was_suggested = bool(re.search(r"\(suggested\)", value, re.IGNORECASE))
+        cleaned = re.sub(r"\s*\(suggested\)\s*$", "", value, flags=re.IGNORECASE).strip()
+        return (cleaned or None), was_suggested
+
     def run(self, inp: IntentInput) -> IntentOutput:
         self._logger.info("[INTENT] INPUT %s", inp.user_request)
 
@@ -149,22 +159,39 @@ class IntentAgent:
         n_tag, c_tag, tag_notes = self._pick_n_and_c_tags(extracted.tags)
         all_notes = list(extracted.notes) + tag_notes
 
+        suggested_fields: List[str] = []
+
+        def cs(field_name: str, value: Optional[str]) -> Optional[str]:
+            cleaned, was_suggested = self._clean(value)
+            if was_suggested:
+                suggested_fields.append(field_name)
+            return cleaned
+
+        # Also clean tag names (from _pick_n_and_c_tags, which returned raw values)
+        n_tag_clean, n_suggested = self._clean(n_tag)
+        c_tag_clean, c_suggested = self._clean(c_tag)
+        if n_suggested:
+            suggested_fields.append("n_terminal_tag")
+        if c_suggested:
+            suggested_fields.append("c_terminal_tag")
+
         out = IntentOutput(
-            gene_symbol=extracted.gene or "GENE",
-            target_species=extracted.target_species or "unspecified",
-            expression_host=extracted.expression_host or "unspecified",
-            best_expression_host=extracted.best_expression_host,
-            backbone=extracted.backbone,
-            promoter=extracted.promoter,
-            assembly_method=extracted.assembly_method,
-            n_terminal_tag=n_tag,
-            c_terminal_tag=c_tag,
-            selection_marker=extracted.selection_marker,
-            origin_of_replication=extracted.origin_of_replication,
-            terminator=extracted.terminator,
-            polyA=extracted.polyA,
-            cloning_site=extracted.cloning_site,
+            gene_symbol=cs("gene_symbol", extracted.gene) or "GENE",
+            target_species=cs("target_species", extracted.target_species) or "unspecified",
+            expression_host=cs("expression_host", extracted.expression_host) or "unspecified",
+            best_expression_host=cs("best_expression_host", extracted.best_expression_host),
+            backbone=cs("backbone", extracted.backbone),
+            promoter=cs("promoter", extracted.promoter),
+            assembly_method=cs("assembly_method", extracted.assembly_method),
+            n_terminal_tag=n_tag_clean,
+            c_terminal_tag=c_tag_clean,
+            selection_marker=cs("selection_marker", extracted.selection_marker),
+            origin_of_replication=cs("origin_of_replication", extracted.origin_of_replication),
+            terminator=cs("terminator", extracted.terminator),
+            polyA=cs("polyA", extracted.polyA),
+            cloning_site=cs("cloning_site", extracted.cloning_site),
             notes=all_notes,
+            suggested_fields=suggested_fields,
         )
 
         self._logger.info("[INTENT] OUTPUT %s", out.model_dump())
