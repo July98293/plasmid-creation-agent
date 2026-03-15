@@ -61,7 +61,8 @@ class IntentAgent:
             "Return JSON only.\n"
             "Do not include markdown.\n"
             "Do not invent highly specific biological parts unless strongly implied.\n"
-            "If a field is not stated, return null.\n"
+            "Extract from the conversation all the features that are not mentioned but required for the payload.\n"
+            "If a field is not specified and you have to fill it in, add '(suggested)' at the end of the field\n"
             "tags must be a list of objects with keys: name, position.\n"
             "Valid position values are 'N-terminal', 'C-terminal', or null.\n"
             "expression_host = what the user explicitly requested.\n"
@@ -148,30 +149,23 @@ class IntentAgent:
         n_tag, c_tag, tag_notes = self._pick_n_and_c_tags(extracted.tags)
         all_notes = list(extracted.notes) + tag_notes
 
-        # Map extracted fields into your existing pipeline IntentOutput.
-        # This assumes your current IntentOutput still expects these legacy keys.
         out = IntentOutput(
             gene_symbol=extracted.gene or "GENE",
             target_species=extracted.target_species or "unspecified",
             expression_host=extracted.expression_host or "unspecified",
+            best_expression_host=extracted.best_expression_host,
+            backbone=extracted.backbone,
             promoter=extracted.promoter,
             assembly_method=extracted.assembly_method,
             n_terminal_tag=n_tag,
             c_terminal_tag=c_tag,
-            terminator=extracted.terminator or extracted.polyA,
+            selection_marker=extracted.selection_marker,
+            origin_of_replication=extracted.origin_of_replication,
+            terminator=extracted.terminator,
+            polyA=extracted.polyA,
+            cloning_site=extracted.cloning_site,
+            notes=all_notes,
         )
 
-        self._logger.info(
-            "[INTENT] OUTPUT %s | extra_fields=%s",
-            out.model_dump(),
-            {
-                "backbone": extracted.backbone,
-                "selection_marker": extracted.selection_marker,
-                "origin_of_replication": extracted.origin_of_replication,
-                "polyA": extracted.polyA,
-                "cloning_site": extracted.cloning_site,
-                "best_expression_host": extracted.best_expression_host,
-                "notes": all_notes,
-            },
-        )
+        self._logger.info("[INTENT] OUTPUT %s", out.model_dump())
         return out
