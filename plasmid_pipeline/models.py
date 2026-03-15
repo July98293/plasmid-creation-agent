@@ -58,6 +58,9 @@ class IntentOutput(BaseModel):
     notes: List[str] = Field(default_factory=list)
     warnings: List[WarningMessage] = Field(default_factory=list)
 
+    # Fields the LLM auto-filled (not explicitly stated by the user)
+    suggested_fields: List[str] = Field(default_factory=list)
+
 
 # ----------------------------
 # Gene agent
@@ -158,7 +161,7 @@ class BackboneOutput(BaseModel):
 
 
 # ----------------------------
-# Construct agent
+# Assembly agent
 # ----------------------------
 
 
@@ -169,46 +172,14 @@ class Annotation(BaseModel):
     type: str
 
 
-class ConstructAnnotation(Annotation):
-    """
-    Backwards-compatible alias used by ConstructAgent for richer annotations.
-    """
-    pass
-
-class ConstructInput(BaseModel):
-    intent: IntentOutput
-    gene: GeneOutput
-    features: FeatureOutput
-    expression: ExpressionOutput
-    backbone: BackboneOutput
-
-
-class ConstructOutput(BaseModel):
-    feature_order: List[str]
-    construct_sequence: str
-    annotations: List[Annotation]
-    warnings: List[WarningMessage] = Field(default_factory=list)
-
-    promoter_included: bool = False
-    terminator_included: bool = False
-    polyA_included: bool = False
-
-    insertion_mode: Literal[
-        "full_cassette",
-        "cds_only",
-        "cds_plus_tags",
-    ] = "full_cassette"
-
-
-# ----------------------------
-# Assembly agent
-# ----------------------------
-
-
 class AssemblyInput(BaseModel):
-    construct_sequence: str
     backbone_sequence: str
-    assembly_preference: Optional[str] = None
+    backbone_name: str
+    backbone_genbank: Optional[str] = None
+    cds_sequence: str
+    gene_symbol: str = ""
+    features: List[ResolvedFeature]
+    assembly_method: Optional[str] = None
 
 
 class AssemblyFragment(BaseModel):
@@ -224,6 +195,9 @@ class AssemblyOutput(BaseModel):
     primer_requirements: List[str]
     assembled_sequence: str
     junction_offset: int
+    cassette_sequence: str = ""
+    feature_order: List[str] = Field(default_factory=list)
+    cassette_annotations: List[Annotation] = Field(default_factory=list)
     warnings: List[WarningMessage] = Field(default_factory=list)
 
 
@@ -237,7 +211,6 @@ class ExportInput(BaseModel):
     gene: GeneOutput
     features: FeatureOutput
     expression: ExpressionOutput
-    construct_output: ConstructOutput
     backbone: BackboneOutput
     assembly: AssemblyOutput
 
@@ -261,6 +234,5 @@ class PipelineResult(BaseModel):
     features: FeatureOutput
     expression: ExpressionOutput
     backbone: BackboneOutput
-    construct_output: ConstructOutput
     assembly: AssemblyOutput
     export_output: ExportOutput
