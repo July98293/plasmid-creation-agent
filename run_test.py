@@ -13,7 +13,12 @@ from plasmid_pipeline.intent_agent import IntentAgent
 from plasmid_pipeline.gene_agent import GeneAgent
 from plasmid_pipeline.backbone_agent import BackboneAgent
 from plasmid_pipeline.feature_agent import FeatureAgent
-from plasmid_pipeline.models import IntentInput, GeneInput, BackboneInput, FeatureInput
+from plasmid_pipeline.expression_agent import ExpressionAgent
+from plasmid_pipeline.assembly_agent import AssemblyAgent
+from plasmid_pipeline.models import (
+    IntentInput, GeneInput, BackboneInput, FeatureInput,
+    ExpressionInput, AssemblyInput,
+)
 
 
 DEFAULT_REQUEST = "Express TP53 in HEK293 cells using a CMV promoter assembled with Gibson"
@@ -103,6 +108,41 @@ async def run_gene(request: str) -> None:
     pretty("OUTPUT — GeneOutput", result)
 
 
+async def run_assembly(request: str) -> None:
+    intent = IntentAgent().run(IntentInput(user_request=request))
+    pretty("IntentOutput", intent)
+
+    gene, backbone, feature = await asyncio.gather(
+        GeneAgent().run(GeneInput(gene_symbol=intent.gene_symbol or "", target_species=intent.target_species)),
+        asyncio.to_thread(BackboneAgent().run, BackboneInput(expression_host=intent.expression_host or "", backbone=intent.backbone)),
+        asyncio.to_thread(FeatureAgent().run, FeatureInput(
+            promoter=intent.promoter, n_terminal_tag=intent.n_terminal_tag,
+            c_terminal_tag=intent.c_terminal_tag, extra_tags=intent.extra_tags,
+            terminator=intent.terminator, polyA=intent.polyA,
+            selection_marker=intent.selection_marker,
+            origin_of_replication=intent.origin_of_replication,
+            expression_host=intent.expression_host,
+        )),
+    )
+    pretty("GeneOutput", gene)
+    pretty("BackboneOutput", backbone)
+    pretty("FeatureOutput", feature)
+
+    expression = ExpressionAgent().run(ExpressionInput(intent=intent, gene=gene, features=feature))
+    pretty("ExpressionOutput", expression)
+
+    assembly = AssemblyAgent().run(AssemblyInput(
+        backbone_sequence=backbone.backbone_sequence,
+        backbone_name=backbone.backbone_name,
+        backbone_genbank=backbone.backbone_genbank,
+        cds_sequence=gene.cds_sequence or "",
+        gene_symbol=gene.gene_symbol,
+        features=feature.features,
+        assembly_method=intent.assembly_method,
+    ))
+    pretty("AssemblyOutput", assembly)
+
+
 async def main() -> None:
     args = sys.argv[1:]
     if not args:
@@ -111,6 +151,7 @@ async def main() -> None:
         print("  backbone [request]")
         print("  gene     [request]")
         print("  feature  [request]")
+        print("  assembly [request]")
         sys.exit(1)
 
     agent_name = args[0].lower()
@@ -128,9 +169,11 @@ async def main() -> None:
             await run_gene(request)
         elif agent_name == "feature":
             await run_feature(request)
+        elif agent_name == "assembly":
+            await run_assembly(request)
         else:
             print(f"Unknown agent: {agent_name!r}")
-            print("Available: intent, backbone, gene, feature")
+            print("Available: intent, backbone, gene, feature, assembly")
             sys.exit(1)
     except Exception as exc:
         print(f"\nFAILED: {exc}")
