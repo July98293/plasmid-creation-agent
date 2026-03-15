@@ -7,6 +7,8 @@ from typing import Any, Dict
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 
+from .intent_agent import IntentAgent
+from .models import IntentInput
 from .orchestrator import PipelineOrchestrator, PipelineValidationError
 
 
@@ -14,6 +16,7 @@ app = Flask(__name__, static_folder=None)
 CORS(app)
 
 _orchestrator = PipelineOrchestrator()
+_intent_agent = IntentAgent()
 
 
 def _run_pipeline(user_request: str) -> Dict[str, Any]:
@@ -30,7 +33,6 @@ def _run_pipeline(user_request: str) -> Dict[str, Any]:
         "gene": result.gene.model_dump(),
         "features": result.features.model_dump(),
         "expression": result.expression.model_dump(),
-        "construct_output": result.construct_output.model_dump(),
         "backbone": result.backbone.model_dump(),
         "assembly": result.assembly.model_dump(),
         "export_output": {
@@ -50,6 +52,26 @@ def index() -> Any:
     """
     app_dir = Path(__file__).resolve().parent.parent / "app"
     return send_from_directory(app_dir, "index.html")
+
+
+@app.route("/api/intent", methods=["POST"])
+def run_intent() -> Any:
+    """
+    Run only the IntentAgent and return the structured intent with suggested_fields.
+
+    Request JSON: { "user_request": "..." }
+    """
+    payload = request.get_json(silent=True) or {}
+    user_request = str(payload.get("user_request") or "").strip()
+    if not user_request:
+        return jsonify({"error": "Missing 'user_request' in JSON body."}), 400
+
+    try:
+        intent = _intent_agent.run(IntentInput(user_request=user_request))
+    except Exception as exc:
+        return jsonify({"error": f"Intent extraction failed: {exc}"}), 500
+
+    return jsonify(intent.model_dump())
 
 
 @app.route("/api/pipeline", methods=["POST"])
