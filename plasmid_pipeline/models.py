@@ -92,28 +92,19 @@ class FeatureInput(BaseModel):
 
     terminator: Optional[str] = None
     polyA: Optional[str] = None
-
     selection_marker: Optional[str] = None
     origin_of_replication: Optional[str] = None
-    cloning_site: Optional[str] = None
 
     expression_host: Optional[str] = None
-    best_expression_host: Optional[str] = None
 
 
 class ResolvedFeature(BaseModel):
     name: str
-    type: Literal[
-        "promoter",
-        "kozak",
-        "tag",
-        "terminator",
-        "polyA",
-        "selection_marker",
-        "origin_of_replication",
-        "cloning_site",
-    ]
+    type: Literal["promoter", "kozak", "tag", "terminator", "selection_marker", "origin_of_replication"]
     sequence: str
+    source: str = "unknown"  # e.g. "NCBI:123456" | "constant"
+    length: int = 0
+    validated: bool = False
     position_hint: Optional[Literal["N", "C"]] = None
 
 
@@ -151,36 +142,19 @@ class ExpressionOutput(BaseModel):
 
 
 class BackboneInput(BaseModel):
-    expression_host: Optional[str] = None
-    best_expression_host: Optional[str] = None
-
-    promoter: Optional[str] = None
-    backbone: Optional[str] = None
-    vector_type: Optional[str] = None
-
-    selection_marker: Optional[str] = None
-    origin_of_replication: Optional[str] = None
-    cloning_site: Optional[str] = None
+    expression_host: str
+    backbone: Optional[str] = None  # from IntentOutput.backbone
+    vector_type: Optional[str] = None  # e.g. "plasmid", "lentiviral"
 
 
 class BackboneOutput(BaseModel):
     backbone_name: str
     backbone_sequence: str
-    source: str
-    notes: List[str] = Field(default_factory=list)
+    backbone_length: int
+    source: str  # e.g. "NCBI:2459837522" or "Addgene:52535"
+    backbone_genbank: Optional[str] = None  # raw GenBank text for downstream feature extraction
+    notes: Optional[str] = None
     warnings: List[WarningMessage] = Field(default_factory=list)
-
-    # Backbone interpretation for downstream logic
-    is_loaded_vector: bool = False
-    backbone_promoters: List[str] = Field(default_factory=list)
-    backbone_payload_markers: List[str] = Field(default_factory=list)
-    suggested_strategy: Optional[str] = None
-    insertion_site_index: Optional[int] = None
-
-    # Resolved metadata
-    selection_marker: Optional[str] = None
-    origin_of_replication: Optional[str] = None
-    cloning_site: Optional[str] = None
 
 
 # ----------------------------
