@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import asyncio
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from logging_utils import get_conversation_logger
 
 from .assembly_agent import AssemblyAgent
@@ -31,9 +34,12 @@ class PipelineValidationError(Exception):
 
 class PipelineOrchestrator:
     """
-    Deterministic pipeline:
+    Pipeline:
 
-    Intent -> Gene -> Feature -> Expression -> Backbone -> Construct -> Assembly -> Export
+    Intent → [Gene ‖ Backbone ‖ Feature] → Expression → Construct → Assembly → Export
+
+    Gene, Backbone, and Feature run concurrently after Intent completes.
+    Their outputs are joined before Expression and Construct.
     """
 
     def __init__(self) -> None:
@@ -57,11 +63,38 @@ class PipelineOrchestrator:
 
         intent = self.intent_agent.run(IntentInput(user_request=user_request))
 
-        gene = await self.gene_agent.run(
-            GeneInput(
-                gene_symbol=intent.gene_symbol,
-                target_species=intent.target_species,
-            )
+        # Run Gene, Backbone, and Feature concurrently.
+        # GeneAgent is already async; Backbone and Feature are synchronous
+        # (urllib-based), so they run in a thread pool via asyncio.to_thread.
+        gene, backbone, feature = await asyncio.gather(
+            self.gene_agent.run(
+                GeneInput(
+                    gene_symbol=intent.gene_symbol,
+                    target_species=intent.target_species,
+                )
+            ),
+            asyncio.to_thread(
+                self.backbone_agent.run,
+                BackboneInput(
+                    expression_host=intent.expression_host,
+                    backbone=intent.backbone,
+                    vector_type=None,
+                ),
+            ),
+            asyncio.to_thread(
+                self.feature_agent.run,
+                FeatureInput(
+                    promoter=intent.promoter,
+                    n_terminal_tag=intent.n_terminal_tag,
+                    c_terminal_tag=intent.c_terminal_tag,
+                    extra_tags=intent.extra_tags,
+                    terminator=intent.terminator,
+                    polyA=intent.polyA,
+                    selection_marker=intent.selection_marker,
+                    origin_of_replication=intent.origin_of_replication,
+                    expression_host=intent.expression_host,
+                ),
+            ),
         )
 
         if not gene.cds_sequence:
@@ -71,25 +104,8 @@ class PipelineOrchestrator:
                 f"warnings={[w.model_dump() for w in gene.warnings]}"
             )
 
-        feature = self.feature_agent.run(
-            FeatureInput(
-                promoter=intent.promoter,
-                n_terminal_tag=intent.n_terminal_tag,
-                c_terminal_tag=intent.c_terminal_tag,
-                terminator=intent.terminator,
-            )
-        )
-
         expression = self.expression_agent.run(
             ExpressionInput(intent=intent, gene=gene, features=feature)
-        )
-
-        backbone = self.backbone_agent.run(
-            BackboneInput(
-                expression_host=intent.expression_host,
-                promoter=intent.promoter,
-                vector_type=None,
-            )
         )
 
         construct = self.construct_agent.run(
@@ -102,12 +118,6 @@ class PipelineOrchestrator:
         )
 
         self._require(bool(construct.construct_sequence), "Construct sequence is empty.")
-
-        if backbone.is_loaded_vector and construct.promoter_included:
-            raise PipelineValidationError(
-                "Selected backbone looks like a loaded expression vector, but the construct still includes a promoter. "
-                "This would likely create a duplicate expression cassette."
-            )
 
         assembly = self.assembly_agent.run(
             AssemblyInput(
