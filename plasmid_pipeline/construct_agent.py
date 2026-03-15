@@ -135,60 +135,9 @@ class ConstructAgent:
 
         n_tags, c_tags, unspecified_tags = self._split_tags(tag_feats)
 
-        requested_promoter_names = [p.name.upper() for p in promoters]
-        backbone_promoters = [p.upper() for p in inp.backbone.backbone_promoters]
-
         include_promoter = True
         include_terminator = True
         insertion_mode: str = "full_cassette"
-
-        if inp.backbone.is_loaded_vector:
-            warnings.append(
-                WarningMessage(
-                    code="LOADED_BACKBONE_CONTEXT",
-                    message=(
-                        "Selected backbone looks like a loaded vector. "
-                        "ConstructAgent will avoid adding a second full cassette when possible."
-                    ),
-                )
-            )
-            insertion_mode = "cds_plus_tags"
-
-        # Heuristic: if backbone name clearly indicates an expression vector (e.g. pCMV)
-        # and a promoter is requested, avoid duplicating the promoter cassette.
-        name_lower = inp.backbone.backbone_name.lower()
-        if any(x in name_lower for x in ["expression vector", "pcmv", "ef1", "cag", "pgk"]):
-            if promoters:
-                include_promoter = False
-                insertion_mode = "cds_plus_tags"
-                warnings.append(
-                    WarningMessage(
-                        code="BACKBONE_EXPRESSION_VECTOR_HEURISTIC",
-                        message=(
-                            "Backbone name suggests it is an expression vector; "
-                            "requested promoter will be omitted to avoid duplicating the cassette."
-                        ),
-                    )
-                )
-
-        if requested_promoter_names and any(p in backbone_promoters for p in requested_promoter_names):
-            include_promoter = False
-            if insertion_mode == "full_cassette":
-                insertion_mode = "cds_plus_tags"
-            warnings.append(
-                WarningMessage(
-                    code="PROMOTER_ALREADY_IN_BACKBONE",
-                    message="Requested promoter already appears to be present in the selected backbone; promoter will be omitted from the insert.",
-                )
-            )
-
-        if inp.backbone.backbone_payload_markers:
-            warnings.append(
-                WarningMessage(
-                    code="BACKBONE_PAYLOAD_MARKERS_DETECTED",
-                    message=f"Backbone payload markers detected: {inp.backbone.backbone_payload_markers}",
-                )
-            )
 
         # Promoter
         promoter_included = False
