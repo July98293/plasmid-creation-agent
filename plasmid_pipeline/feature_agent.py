@@ -88,35 +88,6 @@ _CATEGORY: Dict[str, Dict[str, Any]] = {
 
 _MAMMALIAN_HOST_TOKENS = ["hek", "293", "cho", "cos", "hela", "mamm", "human", "mouse"]
 
-# ---------------------------------------------------------------------------
-# Known fixed NCBI accessions for well-characterised parts.
-# These bypass the dynamic title search entirely — the accession is definitive.
-# key: substring(s) to match against the cleaned, lowercased feature name.
-# ---------------------------------------------------------------------------
-
-_KNOWN_ACCESSIONS: Dict[str, Dict[str, Any]] = {
-    # TEM-1 beta-lactamase — the canonical AmpR gene.
-    # V00613: Sutcliffe 1979, complete bla CDS, 861 bp.
-    "ampicillin": {
-        "accession":   "V00613",
-        "label":       "TEM-1 beta-lactamase (AmpR)",
-        "min_bp":      800,
-        "max_bp":      900,
-    },
-    "ampr": {
-        "accession":   "V00613",
-        "label":       "TEM-1 beta-lactamase (AmpR)",
-        "min_bp":      800,
-        "max_bp":      900,
-    },
-    "tem-1": {
-        "accession":   "V00613",
-        "label":       "TEM-1 beta-lactamase (AmpR)",
-        "min_bp":      800,
-        "max_bp":      900,
-    },
-}
-
 
 class FeatureAgent:
     NCBI_ESEARCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
@@ -339,61 +310,6 @@ class FeatureAgent:
     # Source 1: NCBI GenBank
     # ------------------------------------------------------------------
 
-    def _fetch_by_known_accession(
-        self,
-        clean_name: str,
-        cat: Dict[str, Any],
-    ) -> Optional[ResolvedFeature]:
-        """
-        For parts with a definitive, fixed NCBI accession: fetch it directly,
-        bypassing any title search.  Raises ValueError if the fetch fails or the
-        returned sequence is outside the expected length range.
-        """
-        name_lower = clean_name.lower()
-        info = next((v for k, v in _KNOWN_ACCESSIONS.items() if k in name_lower), None)
-        if info is None:
-            return None
-
-        accession = info["accession"]
-        print(
-            f"[FEATURE NCBI] '{clean_name}' → fixed accession {accession} ({info['label']})",
-            flush=True,
-        )
-
-        gb_text = self._ncbi_fetch_genbank(accession)
-        if not gb_text:
-            raise ValueError(
-                f"Failed to fetch NCBI accession {accession} for '{clean_name}' ({info['label']})."
-            )
-
-        seq = self._extract_seq(gb_text, info["label"], cat)
-        if not seq:
-            raise ValueError(
-                f"No sequence found in NCBI accession {accession} for '{clean_name}'."
-            )
-
-        length = len(seq)
-        if not (info["min_bp"] <= length <= info["max_bp"]):
-            raise ValueError(
-                f"NCBI accession {accession} for '{clean_name}' returned {length} bp; "
-                f"expected {info['min_bp']}–{info['max_bp']} bp.  "
-                f"The accession may have changed — please verify {accession}."
-            )
-
-        print(
-            f"[FEATURE NCBI] ✓ '{clean_name}' accession={accession} ({length} bp)",
-            flush=True,
-        )
-        return ResolvedFeature(
-            name=info["label"],
-            type=cat["output_type"],
-            sequence=seq,
-            source=f"NCBI:{accession}",
-            length=length,
-            validated=True,
-            position_hint=None,
-        )
-
     def _try_ncbi(
         self,
         clean_name: str,
@@ -499,11 +415,6 @@ class FeatureAgent:
     ) -> Optional[ResolvedFeature]:
         clean_name = self._clean(name)
         cat = _CATEGORY[category]
-
-        # 0. Known fixed accessions — bypass search entirely, raise on bad result
-        feat = self._fetch_by_known_accession(clean_name, cat)
-        if feat is not None:
-            return feat
 
         # 1. NCBI dynamic search (primary)
         feat = self._try_ncbi(clean_name, category, cat, warnings)

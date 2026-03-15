@@ -9,3 +9,4 @@ client/__pycache__
 */__pycache__
 client/__pycache__
 agent_conversation.log
+.DS_Store
