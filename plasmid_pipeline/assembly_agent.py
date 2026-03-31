@@ -768,6 +768,13 @@ class AssemblyAgent:
     ) -> Tuple[str, List[AssemblyFragment], List[str]]:
         """
         Gibson assembly: design overlapping sequences for isothermal assembly.
+
+        IT (user-facing explanation):
+        Nel caso della Gibson Assembly, progetta il frammento aggiungendo alle estremità
+        sinistra e destra regioni di omologia (~20–40 bp) che corrispondono alle sequenze
+        adiacenti sul backbone. Poi amplifica il frammento tramite PCR usando primer che
+        incorporano queste code di omologia, così da ottenere sovrapposizioni accurate e
+        facilitare l’assemblaggio one‑pot.
         """
         hom_len = 30
 

@@ -600,11 +600,102 @@
       display: none;
     }
     .interpreting.show{ display: block; }
+
+    /* Full-page loading overlay */
+    .loadingOverlay{
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(37,99,235,.08), transparent 55%), rgba(15,23,42,.82);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+      color: #e5e7eb;
+      font-family: var(--font);
+      padding: 24px;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease;
+    }
+    .loadingOverlay.show{
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .loadingCard{
+      max-width: 420px;
+      width: 100%;
+      background: rgba(15,23,42,.92);
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,.45);
+      box-shadow: 0 24px 60px rgba(0,0,0,.55);
+      padding: 20px 18px 18px;
+    }
+    .loadingTitle{
+      margin: 0 0 6px;
+      font-size: 15px;
+      font-weight: 780;
+      letter-spacing: -.02em;
+      color: #e5e7eb;
+    }
+    .loadingBody{
+      font-size: 13px;
+      color: #cbd5f5;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+    .loadingBody small{
+      display: block;
+      margin-top: 4px;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+    .loadingDots{
+      display: inline-flex;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .loadingDot{
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #60a5fa;
+      opacity: .4;
+      animation: loading-bounce 1.2s infinite ease-in-out;
+    }
+    .loadingDot:nth-child(2){ animation-delay: .15s; }
+    .loadingDot:nth-child(3){ animation-delay: .3s; }
+    .loadingHint{
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 6px;
+    }
+    @keyframes loading-bounce{
+      0%, 80%, 100% { transform: translateY(0); opacity:.35; }
+      40% { transform: translateY(-4px); opacity:1; }
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
+  <div class="loadingOverlay" id="loading_overlay" aria-hidden="true">
+    <div class="loadingCard">
+      <h2 class="loadingTitle">Building your plasmid design…</h2>
+      <p class="loadingBody">
+        This can take a little while — sometimes up to about 3 minutes, especially when talking to external databases.
+        Time for a coffee? Maybe a quick toilet break?
+        <small>Don’t close the tab, we’ll bring everything back here once it’s ready.</small>
+      </p>
+      <div class="loadingDots" aria-hidden="true">
+        <span class="loadingDot"></span>
+        <span class="loadingDot"></span>
+        <span class="loadingDot"></span>
+      </div>
+      <div class="loadingHint">Still running… if it feels slow, blame the APIs, not you.</div>
+    </div>
+  </div>
   <div class="wrap">
     <div class="hero">
       <h1 class="title">Making plasmid prep easier!</h1>
@@ -714,6 +805,7 @@
       intentGrid:   $("intent_grid"),
       intentNotes:  $("intent_notes"),
       interpreting: $("interpreting"),
+      loading:      $("loading_overlay"),
     };
 
     let plasmidChart = null;
@@ -986,6 +1078,24 @@
     }
 
     // ----------------------------------------------------------------
+    // Loading overlay helpers
+    // ----------------------------------------------------------------
+
+    function showLoading(){
+      if (els.loading){
+        els.loading.classList.add("show");
+        els.loading.setAttribute("aria-hidden", "false");
+      }
+    }
+
+    function hideLoading(){
+      if (els.loading){
+        els.loading.classList.remove("show");
+        els.loading.setAttribute("aria-hidden", "true");
+      }
+    }
+
+    // ----------------------------------------------------------------
     // API calls
     // ----------------------------------------------------------------
 
@@ -1024,6 +1134,7 @@
       els.send.disabled = true;
 
       try {
+        showLoading();
         const intent = await callIntentAPI(text);
         populateIntentFields(intent);
       } catch(err){
@@ -1031,6 +1142,7 @@
       } finally {
         els.interpreting.classList.remove("show");
         els.send.disabled = false;
+        hideLoading();
       }
     });
 
@@ -1044,7 +1156,8 @@
     els.build.addEventListener("click", async () => {
       hideToast();
       const userRequest = buildRequestFromIntentFields();
-      showToast("Running pipeline… this may take a minute.");
+      showToast("Running pipeline… this may take up to ~3 minutes, feel free to grab a coffee.");
+      showLoading();
 
       try {
         const data = await callPipelineAPI(userRequest);
@@ -1053,6 +1166,8 @@
         renderPlasmidViewFromPipeline(data);
       } catch(err){
         showToast("Pipeline error: " + err.message);
+      } finally {
+        hideLoading();
       }
     });
 
