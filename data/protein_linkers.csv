@@ -1,0 +1,3 @@
+sseqid,Feature,Type,Description
+GGGGSx3,GGGGSx3,misc_feature,Flexible linker with three tandem repeats of GGGGS commonly used to separate fusion domains.
+EAAAKx3,EAAAKx3,misc_feature,Rigid alpha-helical linker with three tandem repeats of EAAAK used to enforce spatial separation between domains.

@@ -1,0 +1,18 @@
+sseqid,Feature,Type,Description
+IL2_signal_peptide,IL2 signal peptide,sig_peptide,Human IL2 secretion signal peptide frequently used for mammalian secreted proteins.
+IgK_signal_peptide,IgK signal peptide,sig_peptide,Mouse immunoglobulin kappa chain leader sequence used to drive secretion.
+tPA_signal_peptide,tPA signal peptide,sig_peptide,Human tissue plasminogen activator signal peptide often used for high secretion in HEK and CHO.
+Albumin_signal_peptide,Albumin signal peptide,sig_peptide,Human serum albumin signal peptide for extracellular secretion targeting.
+GrowthHormone_signal_peptide,Growth hormone signal peptide,sig_peptide,Human growth hormone leader sequence used for secreted recombinant proteins.
+BM40_signal_peptide,BM40 signal peptide,sig_peptide,SPARC BM40 signal peptide used in mammalian secretion vectors.
+CD33_signal_peptide,CD33 signal peptide,sig_peptide,Human CD33-derived signal peptide for membrane and secreted fusion constructs.
+GaussiaLuc_signal_peptide,Gaussia luciferase signal peptide,sig_peptide,Gaussia luciferase leader sequence used for strong secretion of reporter proteins.
+IFNbeta_signal_peptide,IFNbeta signal peptide,sig_peptide,Human interferon beta signal peptide used in secreted cytokine constructs.
+MHC_I_H2Kb_signal_peptide,MHC I H2-Kb signal peptide,sig_peptide,Class I MHC-derived signal peptide for ER targeting in mammalian cells.
+CD8a_signal_peptide,CD8a signal peptide,sig_peptide,Human CD8 alpha signal peptide commonly used in CAR and membrane receptor constructs.
+PDGFR_signal_peptide,PDGFR signal peptide,sig_peptide,Platelet-derived growth factor receptor leader sequence for mammalian trafficking.
+EPO_signal_peptide,EPO signal peptide,sig_peptide,Erythropoietin signal peptide used in mammalian secretion designs.
+SEAP_signal_peptide,SEAP signal peptide,sig_peptide,Alkaline phosphatase secretion signal used in secreted reporter systems.
+Prl_signal_peptide,Prolactin signal peptide,sig_peptide,Human prolactin signal peptide used for secretory pathway targeting.
+LAMP1_signal_peptide,LAMP1 signal peptide,sig_peptide,Lysosomal associated membrane protein 1 signal peptide for secretory pathway entry.
+VSV_G_signal_peptide,VSV-G signal peptide,sig_peptide,Vesicular stomatitis virus glycoprotein signal peptide used in envelope and membrane constructs.

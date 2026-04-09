@@ -1,0 +1,5 @@
+sseqid,Feature,Type,Description
+RBS_B0030,RBS B0030,RBS,Weak bacterial ribosome binding site from the iGEM Anderson collection.
+RBS_B0031,RBS B0031,RBS,Medium-weak bacterial ribosome binding site suitable for reduced translation load.
+RBS_B0032,RBS B0032,RBS,Medium-strength bacterial ribosome binding site for balanced expression.
+RBS_B0034,RBS B0034,RBS,Strong bacterial ribosome binding site frequently used for high expression in E. coli.

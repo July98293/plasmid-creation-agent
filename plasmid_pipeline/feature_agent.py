@@ -29,6 +29,8 @@ import re
 import time
 import urllib.parse
 import urllib.request
+import csv
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from logging_utils import get_conversation_logger
@@ -107,6 +109,120 @@ class FeatureAgent:
         self._user_agent   = user_agent
         self._extractor    = PlasmidFeatureExtractor()
         self._addgene      = AddgeneClient(user_agent=user_agent)
+        self._catalog = self._load_local_catalog()
+
+    # ------------------------------------------------------------------
+    # Local catalog support (snapgene/fpbase/feature_orientation)
+    # ------------------------------------------------------------------
+
+    def _norm(self, s: str) -> str:
+        return re.sub(r"[^a-z0-9]+", "", (s or "").lower())
+
+    def _load_csv_rows(self, path: Path) -> List[Dict[str, str]]:
+        if not path.exists():
+            return []
+        try:
+            with path.open("r", encoding="utf-8-sig", newline="") as fh:
+                reader = csv.DictReader(fh)
+                return [dict(r) for r in reader]
+        except Exception as exc:
+            self._logger.warning("[FEATURE] Failed to read csv %s: %s", path, exc)
+            return []
+
+    def _load_local_catalog(self) -> Dict[str, Any]:
+        """
+        Load local datasets if available.
+        Any CSV in data/ with columns Feature/Type/Description is ingested
+        into the local feature index (except fpbase/orientation helper files).
+        """
+        root = Path(__file__).resolve().parent.parent
+        data_dir = root / "data"
+        catalog_rows: List[Dict[str, str]] = []
+        for csv_path in sorted(data_dir.glob("*.csv")):
+            low_name = csv_path.name.lower()
+            if low_name in {"fpbase.csv", "feature_orientation.csv"}:
+                continue
+            rows = self._load_csv_rows(csv_path)
+            if not rows:
+                continue
+            # Only ingest files that match the local feature-catalog schema.
+            if "Feature" not in rows[0] or "Type" not in rows[0]:
+                continue
+            catalog_rows.extend(rows)
+
+        fp_rows = self._load_csv_rows(data_dir / "fpbase.csv")
+        orientation_path = data_dir / "feature_orientation.csv"
+        orientation_types: set[str] = set()
+        if orientation_path.exists():
+            try:
+                for line in orientation_path.read_text(encoding="utf-8-sig").splitlines():
+                    line = line.strip()
+                    if not line:
+                        continue
+                    feature_type = line.split(",", 1)[0].strip().lower()
+                    if feature_type:
+                        orientation_types.add(feature_type)
+            except Exception as exc:
+                self._logger.warning("[FEATURE] Failed reading orientation csv %s: %s", orientation_path, exc)
+
+        index: Dict[str, Dict[str, str]] = {}
+        for row in catalog_rows:
+            name = (row.get("Feature") or "").strip()
+            if not name:
+                continue
+            key = self._norm(name)
+            if key not in index:
+                index[key] = row
+
+        fp_names: set[str] = set()
+        for row in fp_rows:
+            name = (row.get("Feature") or "").strip()
+            if name:
+                fp_names.add(self._norm(name))
+
+        self._logger.info(
+            "[FEATURE] Local catalogs loaded: indexed_features=%d fpbase=%d oriented_types=%d",
+            len(index), len(fp_names), len(orientation_types),
+        )
+        return {
+            "index": index,
+            "fpbase_names": fp_names,
+            "orientation_types": orientation_types,
+        }
+
+    def _category_from_snapgene_type(self, snap_type: str) -> Optional[str]:
+        t = (snap_type or "").strip().lower()
+        if t in {"promoter", "-35_signal", "-10_signal"}:
+            return "promoter"
+        if t in {"terminator"}:
+            return "terminator"
+        if t in {"polya_signal", "polya_site"}:
+            return "polya"
+        if t in {"rep_origin", "origin of replication"}:
+            return "ori"
+        if t in {"cds", "gene"}:
+            return "tag"
+        return None
+
+    def _catalog_lookup(self, requested_name: str) -> Dict[str, Any]:
+        """
+        Return local-catalog hints for a requested feature name.
+        """
+        out: Dict[str, Any] = {"canonical_name": requested_name}
+        key = self._norm(requested_name)
+        row = self._catalog["index"].get(key)
+        if row:
+            canonical = (row.get("Feature") or requested_name).strip()
+            out["canonical_name"] = canonical
+            out["snapgene_type"] = (row.get("Type") or "").strip()
+            out["description"] = (row.get("Description") or "").strip()
+            out["suggested_category"] = self._category_from_snapgene_type(out["snapgene_type"])
+            out["in_orientation_table"] = (out["snapgene_type"] or "").lower() in self._catalog["orientation_types"]
+            out["is_fpbase_feature"] = key in self._catalog["fpbase_names"]
+            return out
+
+        out["is_fpbase_feature"] = key in self._catalog["fpbase_names"]
+        return out
 
     # ------------------------------------------------------------------
     # HTTP helpers (mirrors BackboneAgent pattern — synchronous urllib)
@@ -204,43 +320,58 @@ class FeatureAgent:
     # NCBI search term construction (no static alias map — name-driven)
     # ------------------------------------------------------------------
 
-    def _ncbi_search_terms(self, clean_name: str, category: str) -> List[str]:
+    def _ncbi_search_terms(
+        self,
+        clean_name: str,
+        category: str,
+        catalog_meta: Optional[Dict[str, Any]] = None,
+    ) -> List[str]:
         """Return ordered NCBI query strings from most specific to broadest."""
         n = clean_name
+        extra_terms: List[str] = []
+        desc = ((catalog_meta or {}).get("description") or "").lower()
+        snap_type = ((catalog_meta or {}).get("snapgene_type") or "").lower()
+        if "self-cleaving" in desc or "2a" in n.lower():
+            extra_terms.append(f'"{n}"[All Fields] AND peptide[All Fields]')
+        if "signal peptide" in desc or snap_type == "sig_peptide":
+            extra_terms.append(f'"{n}"[All Fields] AND "signal peptide"[All Fields]')
+        if "intron" in desc:
+            extra_terms.append(f'"{n}"[All Fields] AND intron[All Fields]')
+
         if category == "promoter":
             return [
                 f'"{n} promoter"[Title]',
                 f'"{n}"[All Fields] AND "promoter"[Feature Key]',
-            ]
+            ] + extra_terms
         if category == "polya":
             return [
                 f'"{n}"[Title]',
                 f'"{n}"[All Fields] AND "polyadenylation signal"[Feature Key]',
                 f'"{n}"[All Fields] AND polyA[All Fields]',
-            ]
+            ] + extra_terms
         if category == "terminator":
             return [
                 f'"{n} terminator"[Title]',
                 f'"{n}"[All Fields] AND "terminator"[Feature Key]',
-            ]
+            ] + extra_terms
         if category == "selection_marker":
             return [
                 f'"{n} resistance"[Title] AND "complete"[Title]',
                 f'"{n}"[All Fields] AND "antibiotic resistance"[All Fields]',
                 f'"{n}"[All Fields] AND "resistance gene"[All Fields]',
-            ]
+            ] + extra_terms
         if category == "ori":
             return [
                 f'"{n} origin of replication"[Title]',
                 f'"{n}"[All Fields] AND "origin of replication"[All Fields]',
                 f'"{n} ori"[All Fields]',
-            ]
+            ] + extra_terms
         if category == "tag":
             return [
                 f'"{n}"[Title] AND "coding sequence"[Title]',
                 f'"{n}"[All Fields] AND "coding sequence"[All Fields]',
-            ]
-        return [f'"{n}"[Title]']
+            ] + extra_terms
+        return [f'"{n}"[Title]'] + extra_terms
 
     # ------------------------------------------------------------------
     # Addgene search — maps category to the right catalog filter
@@ -319,8 +450,9 @@ class FeatureAgent:
         category: str,
         cat: Dict[str, Any],
         warnings: List[WarningMessage],
+        catalog_meta: Optional[Dict[str, Any]] = None,
     ) -> Optional[ResolvedFeature]:
-        for term in self._ncbi_search_terms(clean_name, category):
+        for term in self._ncbi_search_terms(clean_name, category, catalog_meta):
             ids = self._ncbi_search(term)
             print(f"[FEATURE NCBI] '{clean_name}' query='{term}' → {ids}", flush=True)
             if not ids:
@@ -417,10 +549,24 @@ class FeatureAgent:
         warnings: List[WarningMessage],
     ) -> Optional[ResolvedFeature]:
         clean_name = self._clean(name)
+        catalog_meta = self._catalog_lookup(clean_name)
+        canonical_name = catalog_meta.get("canonical_name") or clean_name
+        suggested = catalog_meta.get("suggested_category")
+        if suggested and suggested != category:
+            warnings.append(
+                WarningMessage(
+                    code="LOCAL_CATALOG_CATEGORY_MISMATCH",
+                    message=(
+                        f"Local catalog suggests '{canonical_name}' is '{suggested}', "
+                        f"but pipeline requested '{category}'. Proceeding with requested category."
+                    ),
+                )
+            )
+        clean_name = canonical_name
         cat = _CATEGORY[category]
 
         # 1. NCBI dynamic search (primary)
-        feat = self._try_ncbi(clean_name, category, cat, warnings)
+        feat = self._try_ncbi(clean_name, category, cat, warnings, catalog_meta)
         if feat:
             return feat
 

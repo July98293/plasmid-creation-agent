@@ -1,0 +1,4 @@
+sseqid,Feature,Type,Description
+P2A,P2A,CDS,Porcine teschovirus-1 2A self-cleaving peptide used for multicistronic expression and near-equimolar protein production.
+T2A,T2A,CDS,Thosea asigna virus 2A self-cleaving peptide commonly used in mammalian bicistronic and multicistronic constructs.
+E2A,E2A,CDS,Equine rhinitis A virus 2A self-cleaving peptide used to separate two open reading frames in a single transcript.
