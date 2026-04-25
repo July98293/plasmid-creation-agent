@@ -1,0 +1,10 @@
+Element Name,Type,DNA Sequence (5' → 3'),Size (bp),Induction Type,Strength,Host,Notes
+T7 Promoter,Inducible (IPTG),TAATACGACTCACTATAG,18,IPTG + T7 RNAP,Very Strong,E. coli BL21(DE3),Requires T7 RNA polymerase. Minimal basal.
+araBAD Promoter,Inducible (L-arabinose),GCCACACCCGCCGCCAGCCAGCCACGCCGCCACCCCCCCGCCGCCACTCGCCCGCCGCCCGCCGCCGCCAGCCGCCCGCCGCCGCCCGCCGCGC,95,L-arabinose (0.002%-0.2%),Very High (200-2000x),E. coli K-12,200-2000 fold induction. Minimal leakage uninduced.
+lac/trc Promoter,Inducible (IPTG),GGAATTGTGAGCGCTCACAATT,23,IPTG,Strong,E. coli,Compromise between tac and lac. Some basal leakage.
+tac Promoter,Inducible (IPTG),TTGACAATTAATCATCGAACTAGTTAACTAGTACGCAAGTTCACATAAAAAAAATACTTGAGGTCTAGTACCGATCTAGACCTAGACTTA,95,IPTG,Very Strong,E. coli,Stronger than lac. Higher basal expression.
+PSC11031 (Constitutive),Constitutive,CCGCTGAAGTCCGTAGTGGTGCCGCCGAGTTTGTGAAGTACCGCGATGCCCGGCGAATGCCGCGCTACGAAGAAGTGCCGCAAGTGAAGGA,95,None (constitutive),Medium,E. coli,BioBrick standard. Reliable predictable expression.
+P_LlacUV5,Hybrid Inducible,GAAATTGTGAGCGCTCACAATTAAAGAGGCTGAGTCGCCCCCGCCGCCCGCCGCCCGCCGCCGCCGCCGAAAAAATGC,80,IPTG,Strong,E. coli,"Hybrid lac/trc. Better than lac, weaker than tac."
+Rhamnose Inducible,Inducible (L-rhamnose),CAAGAAAAGCTATTCGCCGCCATGACCATGACGGTGTTTAAACAACGAGGATTTTATTGCTTTCCTCGGTGCGCCGCCCGGGCCGCGCC,95,L-rhamnose (0.05%-0.2%),High (~50x),E. coli,Orthogonal to araBAD. Good for dual inducible.
+T3 Promoter,Inducible (IPTG),AATTAACCCTCACTAAAGGGAG,22,IPTG + T3 RNAP,Very Strong,E. coli (with T3 RNAP),Alternative to T7. Similar kinetics.
+Ptet,Inducible (aTc),TCCCTATCAGTGATAGAGAACGAAAGTCCCTATCAGTGATAGAGAAC,47,Anhydrotetracycline (aTc),Strong,E. coli,BBa_R0040. Repressed by TetR; derepressed by anhydrotetracycline (aTc). Two tet operator sites. Widely used in synthetic circuits.

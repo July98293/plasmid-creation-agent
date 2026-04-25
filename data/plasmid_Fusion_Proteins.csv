@@ -1,0 +1,11 @@
+Fusion Name,Tag 1 (aa),Linker (aa),Tag 2 (aa),Total Size (aa),Total MW (kDa),Cleavage Strategy,Post-cleavage Scars,Expression Level,Notes
+His6-GGGGS-Target,HHHHHH,GGGGGS,[Target],6+5+[Target],~1+0.6+[Target MW],Optional TEV upstream,None if no cleavage,High,Simple dual-tag. His for purification.
+His6-TEV-GST-Target,HHHHHH,ENLYFQG,MSPILG(...)QQQ,6+7+36+[Target],~0.8+1+26+[Target MW],TEV cleavage → remove His+GST,~2 aa scar (GS) after TEV cut,Very High,Gold standard. Tandem purification.
+MBP-TEV-His6-Target,MKIEEGE(...)QQY,ENLYFQG,HHHHHH,42+7+6+[Target],~42+1+0.8+[Target MW],"TEV cleavage → remove MBP, retain His6",~2 aa scar (GS),Very High,MBP for solubility. His6 for final purification.
+His6-SUMO-Target,HHHHHH,Short linker,SEIAAKMQSLLTHLKQ(...)G,6+11+[SUMO],~0.8+1.3+[Target],SUMO protease → native N-term,None (native),Very High,SUMO enhances expression. No tag post-cleavage.
+GFP-GGGGS-Target,[GFP],GGGGGS,[Target],27+5+[Target],~27+0.6+[Target MW],None (intact fusion),Intact (no scar),High,Live-cell tracking. Non-destructive tag.
+Flag-GGGGS-Target-HA,DYKDDDDK,GGGGGS,[Target]-YPYDVPDYA,8+5+[Target]+9,~1+0.6+[Target]+1.1,None (intact),Intact,High,Dual epitope detection. No cleavage needed.
+His6-3C-Strep-II-Target,HHHHHH,LEVLFQGP,WSHPQFEK,6+8+8+[Target],~0.8+1+1+[Target MW],"3C protease → remove His6, retain Strep",~3 aa scar,High,Dual affinity. TEV-independent alternative.
+Ubi-GGGGS-Target,MQIFVK(...)TLTG,GGGGGS,[Target],76+5+[Target],~8.5+0.6+[Target MW],Ubiquitin-specific protease,None (native N-terminus),High,Ubiquitin fusion enhances expression. Native product.
+NusA-TEV-Target-His6,MKKDDDDD(...)NQGGGTGGG,ENLYFQG,[Target],55+7+[Target]+6,~55+1+[Target]+0.8,"TEV → remove NusA, retain His6",~2 aa scar,Very High,NusA for extreme solubility. His6 remains.
+Sortase A-Tag-Target-LPXTG,[N-term target region],GGS linker,LPXTG (recognition),[Variable],[Variable],Sortase A transpeptidase → C-term ligation,[Depends on ligand],High,Post-translational covalent fusion capability.

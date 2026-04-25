@@ -1,0 +1,10 @@
+Element Name,Type,DNA Sequence (5' → 3'),NCBI Accession,Size (bp),Efficiency (%),Host,Notes
+BGH polyA,Mammalian polyA Signal,CAAATAAAGATCTTTATTTTCATTAGATCTGTGTGTTGGTTTTTTGTGTG,X16065,226,>95%,Mammalian,Bovine Growth Hormone polyadenylation signal. Default in pcDNA3.1 after MCS. Highly efficient in mammalian cells. NCBI accession for full BGH sequence.
+SV40 polyA,Viral polyA Signal,AACTTGTTTATTGCAGCTTATAATGGTTACAAATAAAGCAATAGCATCACAAATTTCACAAATAAAGCATTTTTTTCACTGCATTCTAGTTGTGGTTTGTCCAAACTCATCAATGTATCTTATCATGTCTGGATCC,J02400,238,90-95%,Mammalian,SV40 early polyadenylation signal. Used for selection cassette (neomycin etc.) in pcDNA3.1 and pSV2 vectors. NCBI J02400 contains full SV40 genome.
+SV40 late polyA,Viral polyA Signal,,J02400,246,90-95%,Mammalian,SV40 late polyadenylation signal. Slightly different position in SV40 genome. Often used interchangeably with early polyA. NCBI J02400 contains full SV40 genome.
+hGH polyA,Mammalian polyA Signal,,,236,>95%,Mammalian,Human Growth Hormone polyadenylation signal. Alternative to bGH polyA. Used in some Clontech and Takara vectors. Web fetch for sequence.
+SPA (Synthetic polyA),Synthetic polyA Signal,AATAAAAGATCTTTTTTTTCTAGAGTCGCGGCCGCTTTACTTGTACAGCTCGTCCATGCCGAGAGT,65,>99%,Mammalian,Synthetic minimal polyA signal. Very compact. Used in lentiviral and AAV vectors where space is limited.
+Rabbit beta-globin polyA,Mammalian polyA Signal,,,~750,>95%,Mammalian,Large but highly efficient polyA signal from rabbit beta-globin gene 3'UTR. Used in some retroviral and lentiviral vectors.
+TK polyA (HSV),Viral polyA Signal,,,~1100,~95%,Mammalian,Herpes simplex virus thymidine kinase polyA signal. Used in selection cassettes. Moderate efficiency.
+rho-independent (B0010),Prokaryotic Intrinsic,AAGTTTTTGTACCTAATAATTTTGTACTTTGATACCAGCGGCGGCGGTCGGTT,,56,95-100%,E. coli,BioBrick BBa_B0010. Stem-loop plus U-tract. Standard bacterial transcription terminator.
+rho-independent (B0012),Prokaryotic Intrinsic,CTTTAGAGAGGCTTTTTTCAGGATTAG,,28,98-100%,E. coli,BioBrick BBa_B0012. Maximal termination efficiency. Minimal sequence.

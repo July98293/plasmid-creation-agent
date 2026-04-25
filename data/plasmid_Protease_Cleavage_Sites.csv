@@ -1,0 +1,8 @@
+Protease Name,Recognition Motif (aa),DNA Sequence (5' → 3'),Cleavage Site (↓),Size of Site (aa),Specificity,pH Optimum,Notes
+TEV Protease,ENLYFQG,GAAAACCTGTACTTCCAGGG,ENL↓YFQ,7 aa,Very High,pH 5-8,Most specific. Optimal pH 8. Gold standard.
+Thrombin,LVPRGS,CTGGTGCCCAGGGGTT,LVPR↓GS,6 aa,Medium (some non-specific),pH 7-8,Historic use. Less specific than TEV.
+Factor Xa (Enterokinase),IDELVDGG/IDEGXX,ATTGACGAAGTTGTGGATGGC,IDEL↓V,7 aa consensus,Very High,pH 7.5-8,Asp/Glu-Asp/Glu-Asp/Glu-Leu-Val-Gly-Gly. Very specific.
+3C Protease,LEVLFQGP,CTGGAAGTACTTTTCCAAGGG,LEV↓LFQ,8 aa,Very High,pH 5-8,Similar to TEV. Good alternative.
+Caspase-3,DEVD,GATGAAGTGGATGAC,DEV↓D,4 aa,Medium (some specificity issues),pH 7.5,Apoptosis marker. Can be non-specific in lysates.
+Sortase A,LPXTG + oligogly,CTGCCCXACGGGC,LPX↓TG (+ linker),5 aa + linker,Very High,pH 6-8,Staphylococcus aureus. Transpeptidase. Enables ligation.
+MBP Signal Peptidase I,Ala-X-Ala (SPase I),GCNGGNSCNGC,A(−3)↓X,3-4 aa,Very High,pH 7-8,Signal peptide removal. SPase I recognition.

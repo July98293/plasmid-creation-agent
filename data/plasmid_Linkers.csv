@@ -1,0 +1,11 @@
+Linker Name,Type,Amino Acid Sequence,DNA Sequence (5' → 3'),Length (aa),Flexibility,Rigidity Score,Host,Notes
+GGGGS,Flexible,GGGGSGGGGSGGGGGS,GGTGGTGGTGGTTCTGGTGGTGGTGGTTCTGGTGGTGGTGGTTCT,15,Very High,Highly random coil,E. coli/mammalian,Most popular flexible linker. (GGGGS)x3 repeat. Polyglycine backbone minimizes steric interference.
+GGGGSx2,Flexible,GGGGSGGGGS,GGTGGTGGTGGTTCTGGTGGTGGTGGTTCT,10,Very High,Random coil,E. coli/mammalian,(GGGGS)x2 shorter variant. Less separation between domains.
+GGGGSx4,Flexible,GGGGSGGGGSGGGGSGGGGS,GGTGGTGGTGGTTCTGGTGGTGGTGGTTCTGGTGGTGGTGGTTCTGGTGGTGGTGGTTCT,20,Very High,Random coil,E. coli/mammalian,(GGGGS)x4 longer variant. Greater interdomain distance and flexibility.
+GGS,Flexible,GGSGGSGGS,GGTGGTTCTGGTGGTTCTGGTGGTTCT,9,Very High,Random coil,E. coli/mammalian,Shorter GGS repeat. More compact than GGGGS. Good for close-proximity fusions.
+EAAAK,Semi-rigid,EAAAKEAAAKEAAAK,GAAGCTGCTGCTAAAGAAGCTGCTGCTAAAGAAGCTGCTGCTAAA,15,Medium,E-K interaction restrains,E. coli/mammalian,(EAAAK)x3. Glu-Ala4-Lys repeat. Alpha-helical. Reduces flexibility vs GGGGS. Good for independent domain function.
+Proline-Glycine,Rigid,PGPGPGPGPGPG,CCTGGTCCTGGTCCTGGTCCTGGTCCTGGTCCTGGT,12,Low,Restricted rotation,E. coli/mammalian,(PG)x6. Proline ring restricts phi dihedral. Semi-rigid extended conformation.
+Serine-rich,Flexible-polar,SGGGSSGGGSSGGGSSGGGS,TCTGGTGGTGGTTCTTCTGGTGGTGGTTCTTCTGGTGGTGGTTCTTCTGGTGGTGGTTCT,20,High,Random coil + H-bonds,E. coli/mammalian,(SGGGS)x4. Hydroxyl groups add H-bonding capacity. Polar and soluble.
+GGGGS-AAAA,Semi-flexible,GGGGSAAAA,GGTGGTGGTGGTTCTGCTGCTGCTGCT,9,Medium-High,Balanced,E. coli/mammalian,GGGGS-AAAA hybrid. Combines flexibility (GGGGS) with moderate structure (Ala-helix).
+AG,Flexible,AGAGAGAGAGAGAGAGAGAGAGAGAG,GCTGGTGCTGGTGCTGGTGCTGGTGCTGGTGCTGGTGCTGGTGCTGGTGCTGGTGCTGGTGCTGGTGCTGGTGCTGGT,26,High,Random coil,E. coli/mammalian,(AG)x13 repeat. Alanine-glycine alternation. Compact and simple flexible linker.
+Helical A(EAAAK),Rigid-helical,EAAAKEAAAKEAAAKEAAAK,GAAGCTGCTGCTAAAGAAGCTGCTGCTAAAGAAGCTGCTGCTAAAGAAGCTGCTGCTAAA,20,Low-Medium,Alpha-helix,E. coli/mammalian,(EAAAK)x4 longer helical linker. Maximum domain separation with rigid alpha-helical structure.

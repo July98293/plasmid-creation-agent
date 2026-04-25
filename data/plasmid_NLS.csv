@@ -1,0 +1,7 @@
+NLS Type,Recognition Pattern,Amino Acid Sequence,Size (aa),Receptor,Eukaryotic Host,Cargo Limit,Notes
+SV40 NLS (monopartite),KKKRK,KKKRK,5 aa,Importin-α,Mammalian (universal),~60 kDa max,"SV40 T antigen. Classic, well-characterized."
+Nucleoplasmin (bipartite),K(4/5)X(10)K(4/5),KRXR-[~10 aa]-KRXR,~17 aa,Importin-α/β heterodimer,Mammalian,~300 kDa+ (larger cargo),Bipartite. More flexible than monopartite.
+c-myc NLS,KKKXK,KKKRK,5 aa,Importin-α,Mammalian,~60 kDa max,c-myc proto-oncogene. Moderate efficiency.
+IBB domain (Importin-β binding),Multiple KX(K/R) repeats,MKKPPYKKFLYYGHHLGYY(...)KKKRK,~42 aa,Importin-β direct,Mammalian,~500 kDa+ (very large cargo),IBB from importin-α. For large cargo. Direct β binding.
+M9 NLS (Transportin-SR),NXFX(L/I)X(L/I),NXFXLXL,7 aa,Transportin-SR,Mammalian,~100 kDa max,Separate pathway from Importin-α/β.
+PY-NLS (Non-classical),PY-rich (Proline-Tyrosine),PYXXL,5-7 aa,Importin-β direct,Mammalian,~150 kDa,PY motif adjacent. Different pathway.

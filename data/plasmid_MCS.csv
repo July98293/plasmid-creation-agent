@@ -1,0 +1,9 @@
+Element Name,Type,DNA Sequence (5' → 3'),Size (bp),Restriction Sites,Host,Notes
+pUC19 MCS,Multiple Cloning Site,AAGCTTGCATGCCTGCAGGTCGACGGATCCCCGGGAATTCGAGCTC,47,HindIII-SphI-PstI-SalI-BamHI-SmaI-EcoRI-SacI,E. coli,Standard pUC19 multiple cloning site. Embedded within lacZ-alpha for blue-white screening.
+pBluescript MCS,Multiple Cloning Site,GAATTCGAGCTCGGTACCCGGGGATCCTCTAGAGTCGACCTGCAGGCATGCAAGCTT,58,EcoRI-SacI-KpnI-SmaI-BamHI-XbaI-SalI-PstI-SphI-HindIII,E. coli,pBluescript SK/KS MCS. Flanked by T7 and T3 promoters. Wide restriction site selection.
+pET MCS,Multiple Cloning Site,CATATGGGATCCGAATTCGAGCTCGGTACCCGGGGATCCTCTAGAGTCGACCTGCAGGCATGCAAGCTT,70,NcoI-BamHI-EcoRI-SacI-KpnI-SmaI-BamHI-XbaI-SalI-PstI-SphI-HindIII,E. coli BL21(DE3),pET vector MCS. Begins with NcoI (ATG) for N-terminal fusion. Requires T7 RNAP.
+pcDNA3.1 MCS,Multiple Cloning Site,AAGCTTGATATCGAATTCCTCGAGGTCGACGGATCCGCTAGCCTGCAGGCATGCAAGCTTGG,63,HindIII-EcoRV-EcoRI-XhoI-SalI-BamHI-NheI-PstI-SphI-HindIII,Mammalian,pcDNA3.1 multiple cloning site. Between CMV promoter and BGH polyA. Standard mammalian expression.
+Golden Gate BsaI,Modular Cloning Site,GGTCTCAACATGGTCTCN,18,BsaI overhangs,E. coli/mammalian,Golden Gate BsaI-based cloning site. Enables scarless ligation of multiple fragments in one pot.
+Gibson Assembly Site,Homology-based Cloning,NNNNNNNNNNNNNNNNNNNNNNNNNNNNNN,30,None (homology-based),E. coli/mammalian,Generic 30-bp homology arm for Gibson Assembly. Replace Ns with vector-specific sequence flanking insert site.
+SapI MCS,Modular Cloning Site,GCTCTTCAACATGCTCTTCN,20,SapI overhangs,E. coli/mammalian,SapI (BspQI) modular cloning site for scar-free assembly. Leaves 3-nt overhangs.
+pAAV MCS,Multiple Cloning Site,AGATCTATCGATACCGTCGACCTCGAGGAATTCGCTAGCGGTACCCGGGGATCCC,57,BglII-ClaI-SalI-XhoI-EcoRI-NheI-KpnI-SmaI-BamHI,Mammalian/AAV,pAAV multiple cloning site flanked by ITRs. For recombinant AAV production.

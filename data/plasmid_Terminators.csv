@@ -1,0 +1,6 @@
+Terminator Name,Type,DNA Sequence (5' → 3'),Size (bp),Efficiency (%),Host,Mechanism,Notes
+rho-independent (BBa_B0010),Intrinsic,AAGTTTTTGTACCTAATAATTTTGTACTTTGATACCAGCGGCGGCGGTCGGTT,56,95-100%,E. coli,Stem-loop + U-tract hairpin,BioBrick standard. Very reliable.
+rho-independent (BBa_B0012),Intrinsic,CTTTAGAGAGGCTTTTTTCAGGATTAG,28,98-100%,E. coli,Stem-loop + U-tract,BioBrick standard. Maximal efficiency.
+T7 Terminator (early),T7-specific,GCTAGCTATTAAGGTCGATAG,21,90-95%,E. coli (T7 RNAP),T7 RNAP recognition. Specific to T7.,Does not affect host RNAP.
+rho-dependent (thr operon),Rho-dependent,CCCCCCACCCCCCCCCACCCCCCACCCCCCCACCCCCACTAAA,44,60-80%,E. coli,C-rich region. Rho protein dependent,Less reliable in vitro. Requires Rho protein.
+HDV ribozyme,Self-cleaving,GGCCGATGATCGAACGGATACGGGCCGATGATCGAACGGATACG,47,90-95%,Eukaryotic,HDV self-cleavage. RNA 3' end precision,Post-transcriptional. Precise 3' definition.

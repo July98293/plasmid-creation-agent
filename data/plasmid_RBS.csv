@@ -1,0 +1,11 @@
+Element Name,Type,DNA Sequence (5' → 3'),Size (bp),Strength,Host,Notes
+RBS_B0034,Prokaryotic Strong,AAAGAGGAGAAA,12,Very Strong,E. coli,iGEM BioBrick BBa_B0034. Strongest standard RBS in BioBrick collection. Core Shine-Dalgarno AGGAG.
+RBS_B0032,Prokaryotic Medium,AATTTTAAGGAGGTAAAAAA,20,Medium,E. coli,iGEM BioBrick BBa_B0032. Moderate expression. Good for balanced protein levels.
+RBS_B0030,Prokaryotic Weak,ATTAAAGAGGAGAAAT,16,Weak,E. coli,iGEM BioBrick BBa_B0030. Lower expression. Useful when tight control is needed.
+Shine-Dalgarno,Prokaryotic,AGGAGGT,7,Variable,E. coli,Consensus Shine-Dalgarno hexamer. Complementary to 16S rRNA 3' end. Paired with 5-10 nt spacer to ATG.
+T7 RBS,Prokaryotic T7,AAGGAGATATACATATG,17,Very Strong,E. coli BL21(DE3),Ribosome binding site from pET vector system. Includes ATG start codon. Requires T7 RNAP.
+Kozak Consensus,Eukaryotic,GCCACCATG,9,Strong,Mammalian,Kozak consensus sequence for mammalian translation initiation. Includes ATG start codon.
+Strong Kozak,Eukaryotic,GCCGCCACCATG,12,Very Strong,Mammalian,Optimal Kozak context with extended 5' sequence. Enhanced translation initiation in mammalian cells.
+RBS_araBAD,Prokaryotic,AAGGAGTATATAATG,15,Strong,E. coli,Ribosome binding site from araBAD operon. Used with araBAD promoter (L-arabinose inducible).
+RBS_T7g10,Prokaryotic T7,AATAATTTTGTTTAACTTTAAGAAGGAGATATACATA,37,Very Strong,E. coli BL21(DE3),T7 gene 10 leader sequence with RBS. Full upstream context for pET-based expression.
+RBS_strong,Prokaryotic Strong,AAGGAGGTAAAAAA,14,Very Strong,E. coli,Optimized strong Shine-Dalgarno sequence with consensus AAGGAGG core and A-rich spacer. High translation initiation efficiency.

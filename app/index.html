@@ -684,16 +684,21 @@
     <div class="loadingCard">
       <h2 class="loadingTitle">Building your plasmid design…</h2>
       <p class="loadingBody">
-        This can take a little while, sometimes up to about 3 minutes, especially when talking to external databases.
-        Time for a coffee? Maybe a quick toilet break?
-        <small>Don’t close the tab, we’ll bring everything back here once it’s ready.</small>
+        Fetching sequences from local database and external sources (NCBI / Addgene). This can take 1–3 minutes.
+        <small>Don’t close the tab — each element appears below as it resolves.</small>
       </p>
       <div class="loadingDots" aria-hidden="true">
         <span class="loadingDot"></span>
         <span class="loadingDot"></span>
         <span class="loadingDot"></span>
       </div>
-      <div class="loadingHint">"Better slow than sorry"</div>
+      <!-- live progress list -->
+      <div id="progress_log" style="
+        margin-top:18px; max-height:260px; overflow-y:auto;
+        text-align:left; font-size:12px; font-family:ui-monospace,monospace;
+        background:rgba(0,0,0,.04); border-radius:10px; padding:10px 14px;
+        display:none;
+      "></div>
     </div>
   </div>
   <div class="wrap">
@@ -1160,14 +1165,90 @@
     els.build.addEventListener("click", async () => {
       hideToast();
       const userRequest = buildRequestFromIntentFields();
-      showToast("Running pipeline… this may take up to ~3 minutes, feel free to grab a coffee.");
       showLoading();
 
+      // Reset progress log
+      const progressLog = document.getElementById("progress_log");
+      progressLog.innerHTML = "";
+      progressLog.style.display = "block";
+
+      const sourceLabel = {"dataset": "💾 local", "web:ncbi": "🌐 NCBI", "web:addgene": "🌐 Addgene", "web:fallback-placeholder": "⚠️ placeholder"};
+      function logLine(html){ progressLog.innerHTML += html + "\n"; progressLog.scrollTop = progressLog.scrollHeight; }
+      function sourceTag(src){
+        if (!src) return "";
+        const key = Object.keys(sourceLabel).find(k => src.startsWith(k)) || "other";
+        return ` <span style="opacity:.6">[${sourceLabel[key] || src}]</span>`;
+      }
+
       try {
-        const data = await callPipelineAPI(userRequest);
-        latestJsonText = JSON.stringify(data, null, 2);
-        showToast(latestJsonText);
-        renderPlasmidViewFromPipeline(data);
+        // Step 1: register the job
+        const startRes = await fetch("/api/pipeline/start", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({user_request: userRequest}),
+        });
+        const {job_id, error: startErr} = await startRes.json();
+        if (startErr) throw new Error(startErr);
+
+        // Step 2: open SSE stream
+        await new Promise((resolve, reject) => {
+          const es = new EventSource(`/api/pipeline/stream/${job_id}`);
+
+          es.onmessage = (e) => {
+            const ev = JSON.parse(e.data);
+
+            if (ev.type === "ping") return;
+
+            if (ev.type === "step") {
+              logLine(`<b style="color:#2563eb">▶ ${escapeHtml(ev.label)}</b>`);
+            }
+
+            if (ev.type === "intent") {
+              const d = ev.data || {};
+              logLine(`&nbsp;&nbsp;Gene: <b>${escapeHtml(d.gene_symbol||"?")}</b>  Host: <b>${escapeHtml(d.expression_host||"?")}</b>  Backbone: <b>${escapeHtml(d.backbone||"?")}</b>`);
+            }
+
+            if (ev.type === "progress") {
+              if (ev.step === "resolving") {
+                logLine(`&nbsp;&nbsp;<span style="opacity:.5">⏳ ${escapeHtml(ev.label)} — ${escapeHtml(ev.name||"")}…</span>`);
+              } else if (ev.step === "backbone") {
+                // overwrite the spinner line
+                const lines = progressLog.innerHTML.split("\n");
+                lines.pop(); lines.pop();
+                progressLog.innerHTML = lines.join("\n");
+                const ok = ev.bp > 500;
+                logLine(`&nbsp;&nbsp;${ok?"✅":"⚠️"} <b>${escapeHtml(ev.label)}</b> — ${escapeHtml(ev.name||"")} — ${ev.bp} bp${sourceTag(ev.source)}`);
+              } else if (ev.step === "element") {
+                const lines = progressLog.innerHTML.split("\n");
+                lines.pop(); lines.pop();
+                progressLog.innerHTML = lines.join("\n");
+                const ok = !ev.source?.includes("placeholder");
+                logLine(`&nbsp;&nbsp;${ok?"✅":"⚠️"} <b>${escapeHtml(ev.label)}</b> — ${escapeHtml(ev.name||"")} — ${ev.bp} bp${sourceTag(ev.source)}`);
+              }
+            }
+
+            if (ev.type === "construction") {
+              logLine(`<b style="color:#16a34a">✓ All elements resolved</b>`);
+            }
+
+            if (ev.type === "complete") {
+              es.close();
+              const data = ev.data;
+              latestJsonText = JSON.stringify(data, null, 2);
+              showToast(latestJsonText);
+              renderPlasmidViewFromPipeline(data);
+              resolve();
+            }
+
+            if (ev.type === "error") {
+              es.close();
+              reject(new Error(ev.message));
+            }
+          };
+
+          es.onerror = () => { es.close(); reject(new Error("Stream connection lost")); };
+        });
+
       } catch(err){
         showToast("Pipeline error: " + err.message);
       } finally {

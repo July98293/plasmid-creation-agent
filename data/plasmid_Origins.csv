@@ -1,0 +1,11 @@
+Element Name,Type,DNA Sequence (5' → 3'),NCBI Accession,Size (bp),Copy Number,Host,Notes
+ColE1 ori,Bacterial High-Copy,,L09137,589,15-20,E. coli,Most common E. coli origin. Found in pUC19 pBluescript pGEM. High copy ~500 with rop deletion. Requires RNAII primer and RNAI inhibitor.
+pMB1 ori,Bacterial High-Copy,,L09137,589,500-700,E. coli,pMB1 derivative of ColE1. Found in all pUC vectors. rop gene deleted → very high copy. Identical functional region to ColE1.
+p15A ori,Bacterial Medium-Copy,,X06403,2100,10-12,E. coli,Compatible with ColE1 vectors. Found in pACYC184 pZA vectors. Useful for dual-plasmid systems. Medium copy number.
+pSC101 ori,Bacterial Low-Copy,,J01749,2300,5,E. coli,Stringent low-copy origin. Requires pSC101-encoded RepA protein. Used when tight gene dosage control needed.
+f1 ori,Phage ssDNA,,M11411,458,N/A,E. coli,Filamentous phage f1 origin. Enables ssDNA rescue using M13KO7 helper phage. Found in pBluescript pGEX pUC118.
+SV40 ori,Viral Episomal,,J02400,348,Episomal,Mammalian (COS),SV40 T-antigen origin. Episomal replication in COS cells expressing large T antigen. Found in pcDNA3.1 pSV2 vectors.
+2-micron ori,Yeast High-Copy,,J01347,2200,25-30,S. cerevisiae,S. cerevisiae 2-micron plasmid origin. ~25-30 copies per cell. Requires REP1 REP2 FLP functions.
+CEN/ARS,Yeast Low-Copy,,,~1500,1-2,S. cerevisiae,Centromeric plus autonomously replicating sequence. 1-2 copies per cell. Stable segregation like chromosomes.
+oriP,Viral Episomal,,,1800,Episomal,Mammalian (EBV+),Epstein-Barr virus latent origin. Requires EBNA-1 protein. Episomal maintenance in EBNA-1 expressing cells.
+pUC ori,Bacterial High-Copy,,L09137,589,500-700,E. coli,Standard pUC19 origin. Same as pMB1 (ColE1 family). NCBI L09137 contains complete pUC19 sequence (2686 bp).

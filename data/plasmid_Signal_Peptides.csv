@@ -1,0 +1,7 @@
+Element Name,Type,Amino Acid Sequence,Size (aa),Cleavage Point,Destination,Host,Notes
+pelB Signal Peptide,Sec pathway,MKFLKFSLLTAVVFSASCVDFKXD,25,After pos 18 (SPase I),Periplasm/secreted,E. coli,From pectate lyase. Good efficiency.
+MalE Signal Peptide,Sec pathway,MKLLFPTLTTVYFPKFKXQY,20,After pos 18 (SPase I),Periplasm,E. coli,From maltose-binding protein. Efficient processing.
+OmpA Signal Peptide,Sec pathway,MKKTAIAIAVALAGFATVAQA,21,After pos 19 (SPase I),Outer membrane,E. coli,OMP A. Surface exposure.
+HisJ Signal Peptide,Sec pathway,MKKFLSGLLILLAVSCVDFQKD,23,After pos 17 (SPase I),Periplasm,E. coli,His transport specific. Good targeting.
+TAT Signal (Twin-Arg),TAT pathway,MRTKR(S/F)(M/L)NKC,10,After conserved twin-Arg,Periplasm (cofactors),E. coli,Pre-folded proteins with cofactors preserved.
+DsbA Signal Peptide,Sec pathway (redox),MKFLKFSLLTAVVFSASCVDFKXD,25,After pos 18 (SPase I),Periplasm (disulfides),E. coli,Redox-active. Pairs with DsbA/DsbB system.

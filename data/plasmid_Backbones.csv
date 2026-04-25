@@ -1,0 +1,19 @@
+Backbone Name,Type,DNA Sequence (5' → 3'),NCBI Accession,Addgene ID,Size (bp),Origin,Selection Marker,Host,Notes
+pUC19,Bacterial Cloning,,L09137,,2686,ColE1/pMB1,Ampicillin,E. coli,Most common cloning vector. lacZ-alpha for blue-white screening. High copy. NCBI L09137 is the complete verified sequence.
+pBR322,Bacterial Cloning,,J01749,,4361,pMB1,Ampicillin + Tetracycline,E. coli,Classic cloning vector. Parent of many modern vectors. Lower copy than pUC. NCBI J01749 complete sequence.
+pACYC184,Bacterial Cloning,,X06403,,4244,p15A,Chloramphenicol + Tetracycline,E. coli,Compatible with ColE1 vectors. Useful for dual-plasmid systems. NCBI X06403.
+pACYC177,Bacterial Cloning,,X06402,,3941,p15A,Ampicillin + Kanamycin,E. coli,p15A origin compatible with pUC. Kanamycin or ampicillin selection. NCBI X06402.
+pET-28a,Bacterial Expression,,,26096,5369,ColE1/pMB1,Kanamycin,E. coli BL21(DE3),T7 promoter-based expression. N-terminal His6-tag and T7-tag. Requires T7 RNA polymerase. Addgene #26096.
+pET-21a,Bacterial Expression,,,69740,5443,ColE1/pMB1,Ampicillin,E. coli BL21(DE3),T7 promoter. C-terminal His6-tag. Ampicillin selection. Addgene #69740.
+pGEX-4T-1,Bacterial Expression,,,27458,4969,ColE1/pMB1,Ampicillin,E. coli,GST-fusion expression under tac promoter. Thrombin cleavage site. Addgene #27458.
+pMBP-parallel1,Bacterial Expression,,,26093,6106,ColE1/pMB1,Ampicillin,E. coli,MBP-fusion expression. TEV protease cleavage site. Addgene #26093.
+pcDNA3.1+,Mammalian Expression,,,13031,5428,SV40 ori + ColE1,Neomycin (mammalian) + Ampicillin (bacterial),Mammalian / E. coli,CMV promoter + BGH polyA. Most widely used mammalian expression vector. Addgene #13031.
+pcDNA3.1-,Mammalian Expression,,,13032,5400,SV40 ori + ColE1,Neomycin + Ampicillin,Mammalian / E. coli,Same as pcDNA3.1+ but reverse MCS orientation. Addgene #13032.
+pCAGGS,Mammalian Expression,,,41583,8159,ColE1,Ampicillin,Mammalian / E. coli,CAG (CMV enhancer + chicken beta-actin) promoter. Strong ubiquitous expression. Addgene #41583.
+pAAV-MCS,AAV Production,,,26403,6277,ColE1,Ampicillin,Mammalian / E. coli,ITR-flanked MCS for rAAV production. Serotype-independent. Requires AAV helper functions. Addgene #26403.
+pLenti-CMV-GFP-Puro,Lentiviral,,,17448,9966,ColE1,Ampicillin + Puromycin,Mammalian / E. coli,3rd-gen lentiviral transfer vector. CMV-GFP-WPRE-PPT. Self-inactivating. Addgene #17448.
+pMSCV,Retroviral,,,24828,7127,ColE1,Ampicillin,Mammalian / E. coli,Murine Stem Cell Virus retroviral vector. Used for stable transduction of hematopoietic cells. Addgene #24828.
+pBluescript SK+,Bacterial Cloning,,X52330,,2961,ColE1/pMB1,Ampicillin,E. coli,Phagemid with T3/T7 promoters flanking MCS. Blue-white screening. f1 ori for ssDNA rescue. NCBI X52330.
+pGEM-T Easy,Bacterial Cloning,,,,,ColE1/pMB1,Ampicillin,E. coli,TA-cloning vector from Promega. T-overhangs accept PCR products directly. lacZ blue-white screening.
+pEntry (Gateway),Gateway Cloning,,,17396,,ColE1,Kanamycin,E. coli,Destination vector for Gateway LR recombination. AttB sites flank insert. Addgene #17396.
+pDONR221,Gateway Cloning,,,12536,,ColE1,Kanamycin,E. coli,Entry vector for Gateway BP recombination. AttP sites flank MCS. Addgene #12536.

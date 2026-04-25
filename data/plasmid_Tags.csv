@@ -1,0 +1,11 @@
+Tag Name,Type,Amino Acid Sequence,Size (aa/kDa),Affinity Ligand,Cleavage Site,Host,Notes
+His6-tag,Affinity,HHHHHH,6 aa / 0.8 kDa,Ni-NTA/Co-NTA resin,TEV/enterokinase,E. coli/mammalian,Standard. Can chelate Zn2+. C-terminal preferred.
+His10-tag,Affinity,HHHHHHHHHH,10 aa / 1.3 kDa,Ni-NTA/Co-NTA resin,TEV/enterokinase,E. coli/mammalian,Higher affinity than His6. Better purification.
+GST-tag,Solubility,MSPILGYWKIKGLVQPTRLLLEYLEEKYEQLRQQQ,36 aa / 26 kDa,Glutathione-agarose,Thrombin/TEV,E. coli/mammalian,Improves folding. Large tag. Often removed.
+MBP-tag,Solubility,MKIEEGKLVIWINGDKGYNGLAEVGKKFEKDTGIKVTVEHPDKLEEKFPQVAATGDGPDIIFWAHDRFGGGYAQSGLLAEITPDKAFQDKLYPFTWDAVRYNGKLIAYPIAVEALSLIYNKDLLWLVGKQFSTVEAELGQDVELISPDPETTQQYF,42 aa / 42 kDa,Amylose-agarose,TEV/Factor Xa,E. coli/mammalian,Superior folder. Excellent for difficult proteins.
+FLAG-tag,Epitope,DYKDDDDK,8 aa / 1 kDa,α-FLAG antibodies,None (intact),E. coli/mammalian,Standard antibody recognition. Neutral charge.
+HA-tag,Epitope,YPYDVPDYA,9 aa / 1.1 kDa,α-HA antibodies (12CA5),None (intact),E. coli/mammalian,Influenza hemagglutinin epitope. Good recognition.
+myc-tag,Epitope,EQKLISEEDL,10 aa / 1.2 kDa,α-myc antibodies (9E10),None (intact),E. coli/mammalian,Adenovirus epitope. Excellent specificity.
+Strep-tag II,Affinity,WSHPQFEK,8 aa / 1 kDa,Streptactin-agarose,None (reversible),E. coli/mammalian,Reversible biotin competition. Small footprint.
+Twin-Strep-tag,Affinity,WSHPQFEKWSHPQFEK,16 aa / 2 kDa,Streptactin-agarose,None (reversible),E. coli/mammalian,Higher affinity. Tandem arrangement.
+Biotin Acceptor Peptide (BAP),Post-translational,GLNDIFEAQKIEWHE,15 aa / 1.8 kDa,Streptavidin (via biotin),Requires BirA ligase,E. coli/mammalian,Biotinylation substrate. BirA-dependent.
